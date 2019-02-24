@@ -215,6 +215,8 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
     @Override
     protected void onPostExecute(Response response) {
         super.onPostExecute(response);
+        if (response.response == null)
+            response.type = ResponseType.ERROR;
         callbacks.onLoad(response);
     }
 }

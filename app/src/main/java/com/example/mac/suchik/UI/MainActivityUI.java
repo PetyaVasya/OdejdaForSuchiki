@@ -34,12 +34,12 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
         actionbar.setTitle("WAW");
 //        actionbar.setBackgroundDrawable(getDrawable(R.drawable.backgtoundmusttop));
 //        actionbar.setDisplayShowTitleEnabled (false);
-        if (!hasConnection(this)) {
-                (new InternetDialogFragment()).show(getSupportFragmentManager(), "WAW");
-        }
-        else if (savedInstanceState == null) {
+//        if (!hasConnection(this)) {
+//                (new InternetDialogFragment()).show(getSupportFragmentManager(), "WAW");
+//        }
+//        else if (savedInstanceState == null) {
             openFragment(MAIN_WINDOW_FRAGMENT);
-        }
+//        }
     }
 
     @Override

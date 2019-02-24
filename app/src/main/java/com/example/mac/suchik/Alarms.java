@@ -1,11 +1,13 @@
 package com.example.mac.suchik;
 
 import android.app.AlarmManager;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.SystemClock;
 import android.widget.Toast;
 
@@ -19,6 +21,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 
 public class Alarms {
@@ -38,7 +41,29 @@ public class Alarms {
         mNotificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
         alarmManager = (AlarmManager) context.getSystemService(context.ALARM_SERVICE);
         sp = context.getSharedPreferences("alarms", Context.MODE_PRIVATE);
-        if (sp.getString("alarms", "").equals(""))
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+
+            String CHANNEL_ID = "my_channel_01";
+            CharSequence name = "my_channel";
+            String Description = "This is my channel";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+            mChannel.setDescription(Description);
+            mChannel.enableLights(true);
+            mChannel.setLightColor(Color.RED);
+            mChannel.enableVibration(true);
+            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            mChannel.setShowBadge(false);
+            mNotificationManager.createNotificationChannel(mChannel);
+        }
+
+//        SharedPreferences.Editor s = sp.edit();
+//
+//        s.putString("alarms", "");
+//        s.commit();
+        if (Objects.equals(sp.getString("alarms", ""), ""))
             arcl = new ArrayList<>();
         else
             arcl = gson.fromJson(sp.getString("alarms", ""), AlarmsClock.class).getAlarmClock();

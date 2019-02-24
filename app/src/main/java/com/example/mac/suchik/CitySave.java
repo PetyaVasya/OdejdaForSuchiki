@@ -5,14 +5,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class CitySave {
-    HashMap<Integer, String[]> cityPos;
+    HashMap<String, String[]> cityPos;
     List<String> cities;
 
-    public HashMap<Integer, String[]> getcityPos() {
+    public HashMap<String, String[]> getcityPos() {
         return cityPos;
     }
 
-    public void setcityPos(HashMap<Integer, String[]> cityPos) {
+    public void setcityPos(HashMap<String, String[]> cityPos) {
         this.cityPos = cityPos;
     }
 

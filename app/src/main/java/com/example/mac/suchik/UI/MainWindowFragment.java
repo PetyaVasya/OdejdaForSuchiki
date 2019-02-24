@@ -2,8 +2,11 @@ package com.example.mac.suchik.UI;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -13,18 +16,21 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.mac.suchik.Callbacks;
+import com.example.mac.suchik.CheckInternetConnection;
 import com.example.mac.suchik.CitySave;
 import com.example.mac.suchik.Geoposition;
 import com.example.mac.suchik.R;
@@ -41,12 +47,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class MainWindowFragment extends Fragment implements Callbacks, AdapterView.OnItemSelectedListener {
     public static Storage mStorage;
@@ -56,19 +64,20 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     private RecyclerView rv;
     private RecyclerView rv_clothes;
     private Spinner spinnerCity;
+    private int spinnerLatest;
 
     private String[] position;
     private ArrayAdapter arrayAdapter;
     private boolean first;
     private SharedPreferences sp;
 
-    private HashMap<Integer, String[]> cityPos = new HashMap<>();
+    private HashMap<String, String[]> cityPos = new HashMap<>();
     private List<String> cities = new LinkedList<>();
     private ProgressBar progressBar;
 
     private Fact f;
     private Gson gson;
-
+    private CheckInternetConnection checkInternetConnection;
     String dateText;
 
     boolean isF;
@@ -78,7 +87,6 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         getPermissions();
         mStorage = Storage.getOrCreate(null); // null потому что я надеюсь, что Storage уже инициализирован
-
         mStorage.subscribe(ResponseType.GGEOPOSITION, this);
         mStorage.subscribe(ResponseType.WTODAY, this);
         mStorage.subscribe(ResponseType.COMMUNITY, this);
@@ -86,6 +94,9 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         mStorage.subscribe(ResponseType.WFORECASTS, this);
         gson = new Gson();
         sp = getContext().getSharedPreferences("city", Context.MODE_PRIVATE);
+//        SharedPreferences.Editor s = sp.edit();
+//        s.putString("city", "");
+//        s.commit();
         if (!sp.getString("city", "").equals("")){
             CitySave citySave = gson.fromJson(sp.getString("city", ""), CitySave.class);
             cityPos = citySave.getcityPos();
@@ -97,19 +108,21 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
             String[] lats = getResources().getStringArray(R.array.lat);
             String[] lons = getResources().getStringArray(R.array.lon);
             for (int i = 0; i < lats.length; i++) {
-                cityPos.put(i, new String[]{lats[i], lons[i]});
+                cityPos.put(cities.get(i), new String[]{lats[i], lons[i]});
             }
         }
         return inflater.inflate(R.layout.main_window, container, false);
     }
+
     @Override
     public void onStart() {
         super.onStart();
-
-        Geoposition geoposition = new Geoposition(getContext());
-        String[] position = geoposition.start();
-        //mStorage.setPosition("55.45", "37.36");
-        mStorage.setPosition(position[0], position[1]);
+        checkInternetConnection = new CheckInternetConnection(getContext());
+        checkInternetConnection.execute();
+//        Geoposition geoposition = new Geoposition(getContext());
+//        String[] position = geoposition.start();
+//        //mStorage.setPosition("55.45", "37.36");
+//        mStorage.setPosition(position[0], position[1]);
         //mStorage.updateWeather(false);
     }
 
@@ -119,23 +132,17 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         super.onStop();
         SharedPreferences.Editor editor = sp.edit();
         if (cities.contains("Текущее")){
-            int id = cities.indexOf("Текущее");
-            cities.remove(id);
-            cityPos.remove(id);
-            HashMap<Integer, String[]> now = new HashMap<>();
-            int i = 0;
-            for (Map.Entry entry: cityPos.entrySet()) {
-                now.put(i, (String[]) entry.getValue());
-                i++;
-            }
-            cityPos.clear();
-            cityPos.putAll(now);
+            cities.remove(cities.indexOf("Текущее"));
+            cityPos.remove("Текущее");
         }
         CitySave save = new CitySave();
         save.setCities(cities);
         save.setcityPos(cityPos);
         editor.putString("city", gson.toJson(save));
         editor.apply();
+        if (!checkInternetConnection.isCancelled()){
+            checkInternetConnection.cancel(false);
+        }
     }
 
     @Override
@@ -160,11 +167,6 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
 
         SharedPreferences settings = getContext().getSharedPreferences("settings", Context.MODE_PRIVATE);
         isF = settings.getBoolean("degrees", false);
-
-        spinnerCity.setAdapter(new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new ArrayList<String>() {{
-            addAll(cities);
-        }}));
-        spinnerCity.setOnItemSelectedListener(this);
     }
 
     public void onWeatherDataUpdated(Fact weather) {
@@ -245,13 +247,13 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
             case ResponseType.GGEOPOSITION:
                 position = (String[]) response.response;
                 Log.d("position", position[0] + " " + position[1]);
-                //mStorage.getWeatherToday();
                 mStorage.setPosition(position[0], position[1]);
                 break;
             case ResponseType.WTODAY:
                 f = (Fact) response.response;
+                onChangedWeatherDraw(f);
+                onWeatherDataUpdated(f);
                 mStorage.getClothes(f);
-
                 break;
             case ResponseType.COMMUNITY:
                 final String[] res = (String[]) response.response;
@@ -259,62 +261,45 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 if (res[2].equals("") && res[0].equals("null") && res[1].equals("null"))
                     res[2] = "Текущее";
                 Log.d("community", "community = " + community);
-                if (!res[2].equals(cities.get(0)) && !first) {
+                if (!first) {
                     if (!cities.contains(res[2])) {
-                        arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new ArrayList<String>() {{
-                            add(res[2]);
-                            addAll(cities);
-                        }});
-                        HashMap<Integer, String[]> now = new HashMap<>();
-                        now.put(0, new String[]{res[0], res[1]});
-                        int i = 1;
-                        for (Map.Entry entry: cityPos.entrySet()) {
-                            now.put(i, (String[]) entry.getValue());
-                            i++;
-                        }
-                        cityPos.clear();
-                        cityPos.putAll(now);
                         cities.add(0, res[2]);
-                    }
+                        cityPos.put(res[2], new String[]{res[0], res[1]});
+                        Collections.sort(cities);
+                        arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new LinkedList<String>(){{
+                            add("+Добавить новый");
+                            addAll(cities);}});
+                        }
                     else {
-                        int id = cities.indexOf(res[2]);
-                        cities.remove(id);
-                        cityPos.remove(id);
-                        HashMap<Integer, String[]> now = new HashMap<>();
-                        now.put(0, new String[]{res[0], res[1]});
-                        int i = 1;
-                        for (Map.Entry entry: cityPos.entrySet()) {
-                            now.put(i, (String[]) entry.getValue());
-                            i++;
-                        }
-                        cityPos.clear();
-                        cityPos.putAll(now);
-                        arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new ArrayList<String>() {{
-                            add(res[2]);
-                            addAll(cities);
-                        }});
-                        cities.add(0, res[2]);
+                        arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new LinkedList<String>(){{
+                            add("+Добавить новый");
+                            addAll(cities);}});
                     }
                     spinnerCity.setAdapter(arrayAdapter);
+                    spinnerLatest = cities.indexOf(res[2]) + 1;
+                    spinnerCity.setSelection(spinnerLatest);
+                    spinnerCity.setOnItemSelectedListener(this);
                     first = true;
                 }
-                else if (!res[2].equals(cities.get(0))){
-                    if (!cities.contains(res[2])) {
-                        arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new ArrayList<String>() {{
-                            add(res[2]);
-                            addAll(cities);
-                        }});cities.add(0, res[2]);
-                        cityPos.put(cityPos.size(), new String[]{res[0], res[1]});
-                        spinnerCity.setAdapter(arrayAdapter);
-                    }
+                else if (!cities.contains(res[2])) {
+                    cities.add(0, res[2]);
+                    Collections.sort(cities);
+                    arrayAdapter = new ArrayAdapter<String>(getContext(), R.layout.spinner_item, new LinkedList<String>(){{
+                        add("+Добавить новый");
+                        addAll(cities);}});
+                    cityPos.put(res[2], new String[]{res[0], res[1]});
+                    spinnerCity.setAdapter(arrayAdapter);
+                    spinnerLatest = cities.indexOf(res[2]) + 1;
+                    spinnerCity.setSelection(spinnerLatest);
+                }
+                else {
+                    spinnerLatest = cities.indexOf(res[2]) + 1;
+                    spinnerCity.setSelection(spinnerLatest);
                 }
                 break;
             case ResponseType.CLOTHES:
                 ArrayList<String> recommendations = (ArrayList<String>) response.response;
                 rv_clothes.setAdapter(new RecomendationListAdapter(recommendations));
-                onChangedWeatherDraw(f);
-                onWeatherDataUpdated(f);
-                //progressBar.setVisibility(ProgressBar.INVISIBLE);
                 break;
             case ResponseType.WFORECASTS:
                 List<Forecasts> forecasts = (List<Forecasts>) response.response;
@@ -324,7 +309,8 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 date.setText(dateText);
                 break;
             case ResponseType.GEOERROR:
-                mStorage.setPosition("50", "50");
+                checkInternetConnection = new CheckInternetConnection(getContext());
+                checkInternetConnection.execute();
                 break;
         }
     }
@@ -339,9 +325,41 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        String[] pos = cityPos.get(position);
-        mStorage.setPosition(pos[0], pos[1]);
-        mStorage.getCurrentCommunity();
+        if (position == 0){
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setTitle("Введите название города");
+
+// Set up the input
+            final EditText input = new EditText(getContext());
+// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            builder.setView(input);
+
+// Set up the buttons
+            builder.setPositiveButton("Найти", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    checkInternetConnection = new CheckInternetConnection(getContext(),
+                            input.getText().toString());
+                    checkInternetConnection.execute();
+                }
+            });
+            builder.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                    spinnerCity.setSelection(spinnerLatest);
+                }
+            });
+
+            builder.show();
+        }
+        else {
+            checkInternetConnection = new CheckInternetConnection(getContext(),
+                    cityPos.get(cities.get(position - 1)));
+            checkInternetConnection.execute();
+            spinnerLatest = position;
+        }
     }
 
     @Override

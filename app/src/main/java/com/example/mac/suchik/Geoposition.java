@@ -27,6 +27,7 @@ public class Geoposition implements LocationListener {
     private static final int REQUEST_LOCATION = 1;
     private LocationManager locationManager;
     private static Context mContext;
+    private String name;
 
     // flag for GPS status
     boolean isGPSEnabled = false;
@@ -52,29 +53,35 @@ public class Geoposition implements LocationListener {
         this.mContext = mContext;
     }
 
+    public Geoposition(Context mContext, String name) {
+        this.mContext = mContext;
+        this.name = name;
+    }
     public String[] start(){
         locationManager = (LocationManager)mContext.getSystemService(Context.LOCATION_SERVICE);
-
-        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION);
+        if (name == null) {
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                    (mContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                return start();
-            else
+                    != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                    (mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION);
+                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                        (mContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                    return start();
+                else
+                    return new String[]{null, null};
+            } else if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                buildAlertMessageNoGps();
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                    return start();
                 return new String[]{null, null};
+            } else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                return getLocation();
+            } else return new String[]{null, null};
         }
-        else if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            buildAlertMessageNoGps();
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                return start();
-            return new String[]{null, null};
-        } else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            return getLocation();
-        } else return new String[]{null, null};
-
+        else {
+            return getLocationByName(name);
+        }
     }
 
 
@@ -147,6 +154,23 @@ public class Geoposition implements LocationListener {
             throw e;
         }
         return position;
+    }
+
+    private String[] getLocationByName(String name){
+        Geocoder geocoder = new Geocoder(mContext);
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocationName(name, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (addresses == null)
+            return new String[]{null, null};
+        else if(addresses.size() > 0) {
+            return new String[]{String.valueOf(addresses.get(0).getLatitude()),
+                    String.valueOf(addresses.get(0).getLongitude())};
+        }
+        return new String[]{null, null};
     }
 
     protected void buildAlertMessageNoGps() {

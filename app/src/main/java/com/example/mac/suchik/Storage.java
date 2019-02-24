@@ -98,11 +98,13 @@ public class Storage implements Callbacks{
         if (!executed.get("GC")) {
                 executed.put("GC", true);
                 new GetClothes(mCtx, Storage.this, weather).execute();
-                executed.put("GC", true);
         }
     }
     public void setPosition(String lat, String lon){
-        if (!executed.get("GG")) {
+        if (lat == null || lon == null){
+            onLoad(new Response<>(ResponseType.GEOERROR, null));
+        }
+        else if (!executed.get("GG")) {
             executed.put("GG", true);
             onLoad(new Response<>(ResponseType.GGEOPOSITION, new String[]{lat, lon}));
             executed.put("GG", false);
@@ -146,6 +148,10 @@ public class Storage implements Callbacks{
                 }
             }
         }
+    }
+
+    public void getIconBitmap(String url) {
+
     }
 
     public void getWeatherForecasts() {
@@ -193,6 +199,8 @@ public class Storage implements Callbacks{
                         }
                     }
                 }
+                executed.put("GT", false);
+                executed.put("GF", false);
                 break;
             case ResponseType.WTODAY:
                 this.response = (WeatherData) response.response;
@@ -203,6 +211,7 @@ public class Storage implements Callbacks{
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(new Response<>(ResponseType.WTODAY, response.response));
                 }
+                executed.put("GT", false);
                 break;
             case ResponseType.WFORECASTS:
                 if (type_callback_rels.get(ResponseType.WFORECASTS) == null)
@@ -211,6 +220,7 @@ public class Storage implements Callbacks{
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(new Response<>(ResponseType.WFORECASTS, response.response));
                 }
+                executed.put("GF", false);
                 break;
             case ResponseType.GGEOPOSITION:
                 this.position = (String[]) response.response;
@@ -249,10 +259,8 @@ public class Storage implements Callbacks{
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(response);
                 }
+                executed.put("GCC", false);
                 break;
-        }
-        if (response.type == ResponseType.GETW){
-            executed.putAll(new HashMap(){{put("GT", false); put("GF", false);}});
         }
     }
 }
