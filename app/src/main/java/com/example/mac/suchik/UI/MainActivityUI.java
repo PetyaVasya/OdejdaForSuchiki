@@ -15,6 +15,8 @@ import android.view.MenuItem;
 import com.example.mac.suchik.InternetDialogFragment;
 import com.example.mac.suchik.R;
 import com.example.mac.suchik.Storage;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 public class MainActivityUI extends AppCompatActivity implements InternetDialogFragment.InternetDialogListener {
     public android.support.v7.app.ActionBar actionbar;
@@ -32,6 +34,9 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
         actionbar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#84B3D5")));//change color of action bar
         Storage.getOrCreate(getApplicationContext());
         actionbar.setTitle("WAW");
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
+			.build();
+        ImageLoader.getInstance().init(config);
 //        actionbar.setBackgroundDrawable(getDrawable(R.drawable.backgtoundmusttop));
 //        actionbar.setDisplayShowTitleEnabled (false);
 //        if (!hasConnection(this)) {

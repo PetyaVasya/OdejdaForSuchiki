@@ -1,5 +1,7 @@
 package com.example.mac.suchik.WeatherData;
 
+import com.caverock.androidsvg.SVG;
+
 public class Morning {
         private String _source;
         private float temp_min;
@@ -25,6 +27,7 @@ public class Morning {
         private float prec_type;
         private float prec_strength;
         private float cloudness;
+        private SVG imageIcon;
 
 
         // Getter Methods
@@ -222,4 +225,12 @@ public class Morning {
         public void setCloudness(float cloudness) {
             this.cloudness = cloudness;
         }
+
+    public SVG getImageIcon() {
+        return imageIcon;
     }
+
+    public void setImageIcon(SVG imageIcon) {
+        this.imageIcon = imageIcon;
+    }
+}

@@ -1,14 +1,13 @@
 package com.example.mac.suchik.UI;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.le.AdvertiseSettings;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.PictureDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,18 +31,18 @@ import android.widget.TextView;
 import com.example.mac.suchik.Callbacks;
 import com.example.mac.suchik.CheckInternetConnection;
 import com.example.mac.suchik.CitySave;
-import com.example.mac.suchik.Geoposition;
 import com.example.mac.suchik.R;
 import com.example.mac.suchik.Response;
 import com.example.mac.suchik.ResponseType;
 import com.example.mac.suchik.Storage;
 import com.example.mac.suchik.UI.main_window.RecomendationListAdapter;
+import com.example.mac.suchik.WeatherData.Day_short;
 import com.example.mac.suchik.WeatherData.Fact;
 import com.example.mac.suchik.WeatherData.Forecasts;
 import com.google.gson.Gson;
 
-import java.security.KeyStore;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,10 +52,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.logging.Logger;
 
-public class MainWindowFragment extends Fragment implements Callbacks, AdapterView.OnItemSelectedListener {
+public class MainWindowFragment extends Fragment implements Callbacks, AdapterView.OnItemSelectedListener, Weather_Adapter.ICallBackOnDayChanged {
     public static Storage mStorage;
     private TextView date;
     private ImageView weather_cloud;
@@ -65,22 +62,46 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     private RecyclerView rv_clothes;
     private Spinner spinnerCity;
     private int spinnerLatest;
+    private TextView nowDate;
+    private TextView nowDateDes;
+    private TextView pressure;
+    private TextView windy;
+    private TextView humidity;
+    private TextView feelsLikeTemp;
+    private TextView condition;
+    private TextView textFeelsLike;
+    private ImageView imageHumdity;
+    private ImageView imageWindy;
+    private ImageView imagePressure;
 
     private String[] position;
     private ArrayAdapter arrayAdapter;
     private boolean first;
     private SharedPreferences sp;
+    private String today;
 
+    private HashMap<String, String> conditions = new HashMap<>();
     private HashMap<String, String[]> cityPos = new HashMap<>();
+    private HashMap<String, String> direction = new HashMap<String, String>(){{
+        put("nw", "СЗ");
+        put("n", "С");
+        put("ne", "СВ");
+        put("e", "В");
+        put("se", "ЮВ");
+        put("s", "Ю");
+        put("sw", "ЮЗ");
+        put("w", "З");
+        put("c", "Ш");
+    }};
     private List<String> cities = new LinkedList<>();
     private ProgressBar progressBar;
 
     private Fact f;
     private Gson gson;
     private CheckInternetConnection checkInternetConnection;
-    String dateText;
+    private String dateText;
 
-    boolean isF;
+    private boolean isF;
 
     @Nullable
     @Override
@@ -157,6 +178,17 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         rv = view.findViewById(R.id.recommendation_list);
         rv_clothes = view.findViewById(R.id.for_recommendation_list);
         date = view.findViewById(R.id.date);
+        nowDate = view.findViewById(R.id.now_date);
+        nowDateDes = view.findViewById(R.id.now_date_des);
+        humidity = view.findViewById(R.id.humidity);
+        pressure = view.findViewById(R.id.pressure_mm);
+        windy = view.findViewById(R.id.windy);
+        feelsLikeTemp = view.findViewById(R.id.feels_like);
+        condition = view.findViewById(R.id.condition);
+        textFeelsLike = view.findViewById(R.id.feels_like_des);
+        imageHumdity = view.findViewById(R.id.image_humidity);
+        imageWindy = view.findViewById(R.id.image_windy);
+        imagePressure = view.findViewById(R.id.image_pressure);
         rv_clothes.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         rv.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         List<String> data = new ArrayList<>();
@@ -165,11 +197,37 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         Date currentDate = new Date();
         dateText = dateFormat.format(currentDate);
 
+        String[] keys = getResources().getStringArray(R.array.conditions);
+        String[] values = getResources().getStringArray(R.array.Ru_conditions);
+        for (int i = 0; i < keys.length; i++)
+            conditions.put(keys[i], values[i]);
+
         SharedPreferences settings = getContext().getSharedPreferences("settings", Context.MODE_PRIVATE);
         isF = settings.getBoolean("degrees", false);
     }
 
-    public void onWeatherDataUpdated(Fact weather) {
+    private String parseDate(String date){
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Date newDate = null;
+        try {
+            newDate = format.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        format = new SimpleDateFormat("dd-MM");
+        return format.format(newDate);
+    }
+
+    @Override
+    public void onDayChanged(Fact weather, String date){
+        if (today != null && date.equals(today)){
+            nowDate.setText("Сегодня");
+            weather = f;
+        }
+        else if (today != null){
+            nowDate.setText(parseDate(date));
+        }
+
         if (!isF) {
             if (weather.getTemp() > 0) temperature.setText(String.format("+" + "%.0f" + "°С", weather.getTemp()));
             else temperature.setText(String.format("%.0f °С", weather.getTemp()));
@@ -178,69 +236,90 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
             if (far > 0) temperature.setText(String.format("+" + "%.0f" + "°F", far));
             else temperature.setText(String.format("%.0f" + "°F", far));
         }
-    }
-    public void onChangedWeatherDraw(Fact weather){
-        String condition = weather.getCondition();
-        Log.d("weather", condition);
-        switch (condition){
-            case "clear":
-                weather_cloud.setImageResource(R.drawable.sunny);
-                break;
-            case "partly-cloudy":
-                weather_cloud.setImageResource(R.drawable.cloud);
-                break;
-            case "cloudy":
-                weather_cloud.setImageResource(R.drawable.cloud);
-                break;
-            case "overcast":
-                weather_cloud.setImageResource(R.drawable.cloud);
-                break;
-            case "partly-cloudy-and-light-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "partly-cloudy-and-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "overcast-and-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "overcast-thunderstorms-with-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "cloudy-and-light-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "overcast-and-light-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "cloudy-and-rain":
-                weather_cloud.setImageResource(R.drawable.rain);
-                break;
-            case "overcast-and-wet-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
-            case "partly-cloudy-and-light-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
-            case "partly-cloudy-and-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
-            case "overcast-and-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
-            case "cloudy-and-light-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
-            case "overcast-and-light-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
-            case "cloudy-and-snow":
-                weather_cloud.setImageResource(R.drawable.snowing);
-                break;
+
+        if (weather.getImageIcon() != null) {
+            Drawable drawable = new PictureDrawable(weather.getImageIcon().renderToPicture());
+            weather_cloud.setImageDrawable(drawable);
+        }
+        else {
+            String condition = weather.getCondition();
+            Log.d("weather", condition);
+            switch (condition) {
+                case "clear":
+                    weather_cloud.setImageResource(R.drawable.sunny);
+                    break;
+                case "partly-cloudy":
+                    weather_cloud.setImageResource(R.drawable.cloud);
+                    break;
+                case "cloudy":
+                    weather_cloud.setImageResource(R.drawable.cloud);
+                    break;
+                case "overcast":
+                    weather_cloud.setImageResource(R.drawable.cloud);
+                    break;
+                case "partly-cloudy-and-light-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "partly-cloudy-and-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "overcast-and-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "overcast-thunderstorms-with-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "cloudy-and-light-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "overcast-and-light-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "cloudy-and-rain":
+                    weather_cloud.setImageResource(R.drawable.rain);
+                    break;
+                case "overcast-and-wet-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+                case "partly-cloudy-and-light-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+                case "partly-cloudy-and-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+                case "overcast-and-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+                case "cloudy-and-light-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+                case "overcast-and-light-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+                case "cloudy-and-snow":
+                    weather_cloud.setImageResource(R.drawable.snowing);
+                    break;
+            }
+        }
+        if (!isF) {
+            if (weather.getTemp() > 0) feelsLikeTemp.setText(String.format("+" + "%.0f" + "°С",
+                    weather.getFeels_like()));
+            else feelsLikeTemp.setText(String.format("%.0f °С", weather.getFeels_like()));
+        } else {
+            float far = (weather.getFeels_like() * 9 / 5) + 32;
+            if (far > 0) temperature.setText(String.format("+" + "%.0f" + "°F", far));
+            else temperature.setText(String.format("%.0f °F", far));
         }
 
+        condition.setText(conditions.get(weather.getCondition()));
 
+        pressure.setText(weather.getPressure_mm() + " мм рт. ст.");
+
+        windy.setText(weather.getWind_speed() + " м/c, " + direction.get(weather.getWind_dir()));
+
+        humidity.setText(Math.round(weather.getHumidity()) + "%");
     }
+
     @Override
     public void onLoad(Response response) {
         switch (response.type) {
@@ -251,8 +330,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 break;
             case ResponseType.WTODAY:
                 f = (Fact) response.response;
-                onChangedWeatherDraw(f);
-                onWeatherDataUpdated(f);
+                onDayChanged(f, today);
                 mStorage.getClothes(f);
                 break;
             case ResponseType.COMMUNITY:
@@ -303,9 +381,23 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 break;
             case ResponseType.WFORECASTS:
                 List<Forecasts> forecasts = (List<Forecasts>) response.response;
-                rv.setAdapter(new Weather_Adapter(forecasts.subList(1 , 8), isF));
+                if (today == null){
+                    today = forecasts.get(0).getDate();
+                }
+                forecasts.get(0).getParts().getDay_short().setTemp(f.getTemp());
+                forecasts.get(0).getParts().getDay_short().setImageIcon(f.getImageIcon());
+                forecasts.get(0).getParts().getDay_short().setCondition(f.getCondition());
+                Weather_Adapter adapter = new Weather_Adapter(forecasts.subList(0 , 8), isF);
+                adapter.setClickListener(this);
+                rv.setAdapter(adapter);
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
                 spinnerCity.setVisibility(Spinner.VISIBLE);
+                nowDate.setVisibility(TextView.VISIBLE);
+                nowDateDes.setVisibility(TextView.VISIBLE);
+                textFeelsLike.setVisibility(TextView.VISIBLE);
+                imagePressure.setVisibility(ImageView.VISIBLE);
+                imageWindy.setVisibility(ImageView.VISIBLE);
+                imageHumdity.setVisibility(ImageView.VISIBLE);
                 date.setText(dateText);
                 break;
             case ResponseType.GEOERROR:

@@ -37,4 +37,46 @@
         <item>37.6155600</item>
         <item>38.8425900</item>
     </string-array>
+    
+    <string-array name="conditions">
+        <item>clear</item>
+        <item>partly-cloudy</item>
+        <item>cloudy</item>
+        <item>overcast</item>
+        <item>partly-cloudy-and-light-rain</item>
+        <item>partly-cloudy-and-rain</item>
+        <item>overcast-and-rain</item>
+        <item>overcast-thunderstorms-with-rain</item>
+        <item>cloudy-and-light-rain</item>
+        <item>overcast-and-light-rain</item>
+        <item>cloudy-and-rain</item>
+        <item>overcast-and-wet-snow</item>
+        <item>partly-cloudy-and-light-snow</item>
+        <item>partly-cloudy-and-snow</item>
+        <item>overcast-and-snow</item>
+        <item>cloudy-and-light-snow</item>
+        <item>overcast-and-light-snow</item>
+        <item>cloudy-and-snow</item>
+    </string-array>
+
+    <string-array name="Ru_conditions">
+        <item>ясно</item>
+        <item>малооблачно</item>
+        <item>облачно с прояснениями</item>
+        <item>пасмурно</item>
+        <item>небольшой дождь</item>
+        <item>дождь</item>
+        <item>сильный дождь</item>
+        <item>сильный дождь, гроза</item>
+        <item>небольшой дождь</item>
+        <item>небольшой дождь</item>
+        <item>дождь</item>
+        <item>дождь со снегом</item>
+        <item>небольшой снег</item>
+        <item>снег</item>
+        <item>снегопад</item>
+        <item>небольшой снег</item>
+        <item>небольшой снег</item>
+        <item>снег</item>
+    </string-array>
 </resources>

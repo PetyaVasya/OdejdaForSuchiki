@@ -1,5 +1,7 @@
 package com.example.mac.suchik.WeatherData;
 
+import com.caverock.androidsvg.SVG;
+
 public class Fact {
     private float temp;
     private float feels_like;
@@ -22,7 +24,19 @@ public class Fact {
     private float prec_type;
     private float prec_strength;
     private float cloudness;
+    private SVG imageIcon;
 
+    public boolean isPolar() {
+        return polar;
+    }
+
+    public SVG getImageIcon() {
+        return imageIcon;
+    }
+
+    public void setImageIcon(SVG imageIcon) {
+        this.imageIcon = imageIcon;
+    }
 
     // Getter Methods
 

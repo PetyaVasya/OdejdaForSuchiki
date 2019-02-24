@@ -172,6 +172,8 @@ public class Storage implements Callbacks{
     public void onLoad(Response response) {
         if (response.response != null && response.response.getClass() == WeatherData.class)
             this.response = (WeatherData) response.response;
+        if (response.response == null)
+            response.type = ResponseType.ERROR;
         List<Callbacks> list = null;
         switch (response.type){
             case ResponseType.GETW:
@@ -183,10 +185,10 @@ public class Storage implements Callbacks{
                     for (Callbacks callbacks: list) {
                         switch (i) {
                             case ResponseType.GETW:
-                                callbacks.onLoad(new Response<>(ResponseType.WTODAY,
-                                        ((WeatherData) response.response).getFact()));
                                 callbacks.onLoad(new Response<>(ResponseType.WFORECASTS,
                                         ((WeatherData) response.response).getForecasts()));
+                                callbacks.onLoad(new Response<>(ResponseType.WTODAY,
+                                        ((WeatherData) response.response).getFact()));
                                 break;
                             case ResponseType.WTODAY:
                                 callbacks.onLoad(new Response<>(ResponseType.WTODAY,
