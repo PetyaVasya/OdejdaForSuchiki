@@ -328,7 +328,6 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         if (position == 0){
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
             builder.setTitle("Введите название города");
-
 // Set up the input
             final EditText input = new EditText(getContext());
 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text

@@ -42,23 +42,6 @@ public class Alarms {
         alarmManager = (AlarmManager) context.getSystemService(context.ALARM_SERVICE);
         sp = context.getSharedPreferences("alarms", Context.MODE_PRIVATE);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-
-
-            String CHANNEL_ID = "my_channel_01";
-            CharSequence name = "my_channel";
-            String Description = "This is my channel";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
-            mChannel.setDescription(Description);
-            mChannel.enableLights(true);
-            mChannel.setLightColor(Color.RED);
-            mChannel.enableVibration(true);
-            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
-            mChannel.setShowBadge(false);
-            mNotificationManager.createNotificationChannel(mChannel);
-        }
-
 //        SharedPreferences.Editor s = sp.edit();
 //
 //        s.putString("alarms", "");
