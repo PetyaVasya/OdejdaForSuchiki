@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
 import android.os.Bundle;
+import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -387,7 +388,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 forecasts.get(0).getParts().getDay_short().setTemp(f.getTemp());
                 forecasts.get(0).getParts().getDay_short().setImageIcon(f.getImageIcon());
                 forecasts.get(0).getParts().getDay_short().setCondition(f.getCondition());
-                Weather_Adapter adapter = new Weather_Adapter(forecasts.subList(0 , 8), isF);
+                Weather_Adapter adapter = new Weather_Adapter(forecasts.subList(0 , 7), isF);
                 adapter.setClickListener(this);
                 rv.setAdapter(adapter);
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
