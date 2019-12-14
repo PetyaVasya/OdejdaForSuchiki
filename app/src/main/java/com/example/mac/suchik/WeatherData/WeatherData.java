@@ -1,23 +1,47 @@
+
 package com.example.mac.suchik.WeatherData;
 
-import java.util.List;
 
 public class WeatherData {
-        private float now;
-        private String now_dt;
-        Info info;
-        Fact fact;
-        List<Forecasts> forecasts;
+
+    private String cod;
+    private Integer message;
+    private Integer cnt;
+    private java.util.List<List> list = null;
+    private Fact fact = null;
+    private City city;
 
 
-        // Getter Methods
-
-    public Info getInfo() {
-        return info;
+    public String getCod() {
+        return cod;
     }
 
-    public void setInfo(Info info) {
-        this.info = info;
+    public void setCod(String cod) {
+        this.cod = cod;
+    }
+
+    public Integer getMessage() {
+        return message;
+    }
+
+    public void setMessage(Integer message) {
+        this.message = message;
+    }
+
+    public Integer getCnt() {
+        return cnt;
+    }
+
+    public void setCnt(Integer cnt) {
+        this.cnt = cnt;
+    }
+
+    public City getCity() {
+        return city;
+    }
+
+    public void setCity(City city) {
+        this.city = city;
     }
 
     public Fact getFact() {
@@ -28,31 +52,11 @@ public class WeatherData {
         this.fact = fact;
     }
 
-    public float getNow() {
-            return now;
-        }
-
-        public String getNow_dt() {
-            return now_dt;
-        }
-
-        // Setter Methods
-
-        public void setNow(float now) {
-            this.now = now;
-        }
-
-        public void setNow_dt(String now_dt) {
-            this.now_dt = now_dt;
-        }
-
-
-    public void setForecasts(List<Forecasts> forecasts) {
-        this.forecasts = forecasts;
+    public java.util.List<List> getList() {
+        return list;
     }
 
-    public List<Forecasts> getForecasts() {
-        return forecasts;
+    public void setList(java.util.List<List> list) {
+        this.list = list;
     }
 }
-

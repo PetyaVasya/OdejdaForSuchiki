@@ -4,19 +4,22 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.example.mac.suchik.WeatherData.Fact;
+import com.example.mac.suchik.WeatherData.List;
 import com.example.mac.suchik.WeatherData.WeatherData;
 import com.google.gson.Gson;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class Storage implements Callbacks{
     private WeatherData response;
     private String[] position;
-    private HashMap<Integer, List<Callbacks>> type_callback_rels = new LinkedHashMap<>();
+    private HashMap<Integer, java.util.List<Callbacks>> type_callback_rels = new LinkedHashMap<>();
     private Gson gson;
     private Context mCtx;
     private SharedPreferences sp;
@@ -94,7 +97,7 @@ public class Storage implements Callbacks{
             }
     }
 
-    public void getClothes(Fact weather) {
+    public void getClothes(List weather) {
         if (!executed.get("GC")) {
                 executed.put("GC", true);
                 new GetClothes(mCtx, Storage.this, weather).execute();
@@ -117,7 +120,7 @@ public class Storage implements Callbacks{
         type_callback_rels.get(type).add(callbacks);
     }
     public void unsubscribe(Callbacks callbacks){
-        for (List<Callbacks> callbacks1: type_callback_rels.values()){
+        for (java.util.List<Callbacks> callbacks1: type_callback_rels.values()){
             if (callbacks1.contains(callbacks))
                 callbacks1.remove(callbacks1.indexOf(callbacks));
         }
@@ -161,7 +164,7 @@ public class Storage implements Callbacks{
             } else{
                 if (position != null && position[0] != null && position[1] != null){
                     executed.put("GF", true);
-                    onLoad(new Response<>(ResponseType.WFORECASTS, response.getForecasts()));
+                    onLoad(new Response<>(ResponseType.WFORECASTS, response.getList()));
                     executed.put("GF", false);
                 }
             }
@@ -174,7 +177,7 @@ public class Storage implements Callbacks{
             this.response = (WeatherData) response.response;
         if (response.response == null)
             response.type = ResponseType.ERROR;
-        List<Callbacks> list = null;
+        java.util.List<Callbacks> list = null;
         switch (response.type){
             case ResponseType.GETW:
                 this.response = (WeatherData) response.response;
@@ -186,7 +189,7 @@ public class Storage implements Callbacks{
                         switch (i) {
                             case ResponseType.GETW:
                                 callbacks.onLoad(new Response<>(ResponseType.WFORECASTS,
-                                        ((WeatherData) response.response).getForecasts()));
+                                        ((WeatherData) response.response).getList()));
                                 callbacks.onLoad(new Response<>(ResponseType.WTODAY,
                                         ((WeatherData) response.response).getFact()));
                                 break;
@@ -196,7 +199,7 @@ public class Storage implements Callbacks{
                                 break;
                             case ResponseType.WFORECASTS:
                                 callbacks.onLoad(new Response<>(ResponseType.WFORECASTS,
-                                        ((WeatherData) response.response).getForecasts()));
+                                        ((WeatherData) response.response).getList()));
                                 break;
                         }
                     }
@@ -206,7 +209,17 @@ public class Storage implements Callbacks{
                 break;
             case ResponseType.WTODAY:
                 this.response = (WeatherData) response.response;
-                getClothes(this.response.getFact());
+                final Fact n = this.response.getFact();
+                final Date current = new Date(System.currentTimeMillis());
+                getClothes(new List(){{
+                    setDt_txt(new SimpleDateFormat("dd.MM HH:mm").format(current));
+                    setMain(n.getMain());
+                    setClouds(n.getClouds());
+                    setDt(n.getDt());
+                    setSys(n.getSys());
+                    setWeather(n.getWeather());
+                    setWind(n.getWind());
+                }});
                 if (type_callback_rels.get(ResponseType.WTODAY) == null)
                     type_callback_rels.put(ResponseType.WTODAY, new ArrayList<Callbacks>());
                 list = type_callback_rels.get(ResponseType.WTODAY);

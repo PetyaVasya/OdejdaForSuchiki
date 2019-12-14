@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WAW</string>
+    <string name="app_name">Yow</string>
     <string name="weather_preferences">weather</string>
     <string name="notification_title">Подобраны новые рекомендации</string>
     <string name="notification_text">Зайдите в приложение для просмотра</string>

@@ -10,7 +10,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
-import com.example.mac.suchik.WeatherData.Fact;
+import com.example.mac.suchik.WeatherData.List;
 import com.example.mac.suchik.WeatherData.WeatherData;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
     String having;
     String orderBy;
     private Callbacks callbacks;
-    Fact weather;
+    List weather;
 
     SharedPreferences settings;
 
@@ -42,7 +42,7 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
 
 
     final String LOG_TAG = "myLog";
-    public GetClothes(Context mContext, Callbacks callbacks, Fact weather) {
+    public GetClothes(Context mContext, Callbacks callbacks, List weather) {
         //Storage.getOrCreate(null).updateWeather(true);
         this.mContext = mContext;
         this.callbacks = callbacks;
@@ -78,12 +78,12 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
         db.open();
         columns = new String[]{db.COLUMN_NAME, db.COLUMN_CATEGORY, db.COLUMN_COLOR};
 
-        if (weather.getTemp() > 15) { // Температура > 15
+        if (weather.getMain().getTemp() > 15) { // Температура > 15
             selection = (db.COLUMN_TEMP_MAX + " < 31");
             selection += (" and " + db.COLUMN_TEMP_MIN + " > 14");
-            if (weather.getPrec_type() != 0) { // Идет дождь
+            if (!weather.getWeather().get(0).getMain().equals("Rain")) { // Идет дождь
                 selection += (" and " + db.COLUMN_RAIN + " > 0");
-                if (weather.getWind_speed() > 10) { // Скорость ветра
+                if (weather.getWind().getSpeed() > 10) { // Скорость ветра
                     selection += (" and " + db.COLUMN_WIND + " > 0");
                     // Дождевик, футболка, резиновые сапоги, шорты/юбка/легкие брюки
                 } else {
@@ -92,28 +92,28 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
                 }
             } else { // Не идет дождь
                 selection += (" and " + db.COLUMN_RAIN + " < 2");
-                if (weather.getWind_speed() > 10) { // Скорость ветра
+                if (weather.getWind().getSpeed() > 10) { // Скорость ветра
                     selection += (" and " + db.COLUMN_WIND + " > 0");
-                    if (weather.getCloudness() == 0) { // Облачность
+                    if (weather.getClouds().getAll() == 0) { // Облачность
                         selection += (" and " + db.COLUMN_CLOUD + " > 0");
                         recommendations.add("Наденьте светлую одежду");
                     }
                     // Кепка/шляпа, ветровка, легкие брюки/шорты/юбка, футболка, кроссовки/сандалии, солнечные очки
                 } else {
                     selection += (" and " + db.COLUMN_WIND + " < 2");
-                    if (weather.getCloudness() == 0) { // Облачность
+                    if (weather.getClouds().getAll() == 0) { // Облачность
                         selection += (" and " + db.COLUMN_CLOUD + " > 0");
                     }
                     // Кепка/шляпа, легкие брюки/шорты/юбка, футболка, кроссовки/сандалии, солнечные очки
                 }
             }
-        } else if (weather.getTemp() > 0) {
+        } else if (weather.getMain().getTemp() > 0) {
             selection = (db.COLUMN_TEMP_MAX + " < 16");
             selection += (" and " + db.COLUMN_TEMP_MIN + " > -1");
-            if (weather.getPrec_type() != 0) { // Идет дождь
+            if (!weather.getWeather().get(0).getMain().equals("Rain")) { // Идет дождь
                 selection += (" and " + db.COLUMN_RAIN + " > 0");
                 //selection += (" and " + db.COLUMN_CLOUD + " < 2");
-                if (weather.getWind_speed() > 10) {
+                if (weather.getWind().getSpeed() > 10) {
                     selection += (" and " + db.COLUMN_WIND + " > 0");
                     // Легкая шапка, перчатки, легкий шарф, непромокаемая куртка, брюки, футболка, резиновые сапоги
                 } else {
@@ -126,7 +126,7 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
             }
             //Шапка, шарф, перчатки, брюки
 
-        } else if (weather.getTemp() > -15) {
+        } else if (weather.getMain().getTemp() > -15) {
             selection = (db.COLUMN_TEMP_MAX + " < 1");
             selection += (" and " + db.COLUMN_TEMP_MIN + " > -16");
             //Шапка, теплые перчатки, шарф, куртка/пальто, термобелье, брюки, ботинки, футболка

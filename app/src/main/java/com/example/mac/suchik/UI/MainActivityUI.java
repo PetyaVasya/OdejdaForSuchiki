@@ -33,7 +33,7 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
         actionbar = getSupportActionBar();
         actionbar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#84B3D5")));//change color of action bar
         Storage.getOrCreate(getApplicationContext());
-        actionbar.setTitle("WAW");
+        actionbar.setTitle("YoW");
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
 			.build();
         ImageLoader.getInstance().init(config);

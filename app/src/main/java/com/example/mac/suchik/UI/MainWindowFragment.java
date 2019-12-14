@@ -1,6 +1,7 @@
 package com.example.mac.suchik.UI;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
 import android.os.Bundle;
-import android.os.Debug;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -37,9 +37,9 @@ import com.example.mac.suchik.Response;
 import com.example.mac.suchik.ResponseType;
 import com.example.mac.suchik.Storage;
 import com.example.mac.suchik.UI.main_window.RecomendationListAdapter;
-import com.example.mac.suchik.WeatherData.Day_short;
 import com.example.mac.suchik.WeatherData.Fact;
-import com.example.mac.suchik.WeatherData.Forecasts;
+import com.example.mac.suchik.WeatherData.List;
+import com.example.mac.suchik.WeatherData.Sys;
 import com.google.gson.Gson;
 
 import java.text.DateFormat;
@@ -47,11 +47,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 
 public class MainWindowFragment extends Fragment implements Callbacks, AdapterView.OnItemSelectedListener, Weather_Adapter.ICallBackOnDayChanged {
@@ -94,10 +94,10 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         put("w", "З");
         put("c", "Ш");
     }};
-    private List<String> cities = new LinkedList<>();
+    private java.util.List<String> cities = new LinkedList<>();
     private ProgressBar progressBar;
 
-    private Fact f;
+    private List f;
     private Gson gson;
     private CheckInternetConnection checkInternetConnection;
     private String dateText;
@@ -192,7 +192,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         imagePressure = view.findViewById(R.id.image_pressure);
         rv_clothes.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         rv.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
-        List<String> data = new ArrayList<>();
+        java.util.List<String> data = new ArrayList<>();
 
         DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
         Date currentDate = new Date();
@@ -208,42 +208,42 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     }
 
     private String parseDate(String date){
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date newDate = null;
         try {
             newDate = format.parse(date);
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        format = new SimpleDateFormat("dd-MM");
+        format = new SimpleDateFormat("dd.MM HH:mm");
         return format.format(newDate);
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
-    public void onDayChanged(Fact weather, String date){
-        if (today != null && date.equals(today)){
-            nowDate.setText("Сегодня");
+    public void onDayChanged(List weather, String date){
+        if ((today != null && date.equals(today)) || (date == null)){
+            nowDate.setText("Сейчас");
             weather = f;
         }
-        else if (today != null){
-            nowDate.setText(parseDate(date));
+        else{
+            nowDate.setText(date);
         }
 
         if (!isF) {
-            if (weather.getTemp() > 0) temperature.setText(String.format("+" + "%.0f" + "°С", weather.getTemp()));
-            else temperature.setText(String.format("%.0f °С", weather.getTemp()));
+            if (weather.getMain().getTemp() > 0) temperature.setText(String.format("+" + "%.0f" + "°С", weather.getMain().getTemp()));
+            else temperature.setText(String.format("%.0f °С", weather.getMain().getTemp()));
         } else {
-            float far = (weather.getTemp() * 9 / 5) + 32;
+            float far = (weather.getMain().getTemp() * 9 / 5) + 32;
             if (far > 0) temperature.setText(String.format("+" + "%.0f" + "°F", far));
             else temperature.setText(String.format("%.0f" + "°F", far));
         }
 
-        if (weather.getImageIcon() != null) {
-            Drawable drawable = new PictureDrawable(weather.getImageIcon().renderToPicture());
-            weather_cloud.setImageDrawable(drawable);
+        if (weather.getWeather().get(0).getImageIcon() != null) {
+            weather_cloud.setImageBitmap(weather.getWeather().get(0).getImageIcon());
         }
         else {
-            String condition = weather.getCondition();
+            String condition = weather.getWeather().get(0).getMain();
             Log.d("weather", condition);
             switch (condition) {
                 case "clear":
@@ -303,22 +303,22 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
             }
         }
         if (!isF) {
-            if (weather.getTemp() > 0) feelsLikeTemp.setText(String.format("+" + "%.0f" + "°С",
-                    weather.getFeels_like()));
-            else feelsLikeTemp.setText(String.format("%.0f °С", weather.getFeels_like()));
+            if (weather.getMain().getTemp() > 0) feelsLikeTemp.setText(String.format("+" + "%.0f" + "°С",
+                    weather.getMain().getFeels_like()));
+            else feelsLikeTemp.setText(String.format("%.0f °С", weather.getMain().getFeels_like()));
         } else {
-            float far = (weather.getFeels_like() * 9 / 5) + 32;
+            float far = (weather.getMain().getFeels_like() * 9 / 5) + 32;
             if (far > 0) temperature.setText(String.format("+" + "%.0f" + "°F", far));
             else temperature.setText(String.format("%.0f °F", far));
         }
 
-        condition.setText(conditions.get(weather.getCondition()));
+        condition.setText(weather.getWeather().get(0).getDescription());
 
-        pressure.setText(weather.getPressure_mm() + " мм рт. ст.");
+        pressure.setText(weather.getMain().getPressure() + " мм рт. ст.");
 
-        windy.setText(weather.getWind_speed() + " м/c, " + direction.get(weather.getWind_dir()));
+        windy.setText(weather.getWind().getSpeed() + " м/c, " + direction.get(weather.getWind().getDeg()));
 
-        humidity.setText(Math.round(weather.getHumidity()) + "%");
+        humidity.setText(Math.round(weather.getMain().getHumidity()) + "%");
     }
 
     @Override
@@ -330,7 +330,17 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 mStorage.setPosition(position[0], position[1]);
                 break;
             case ResponseType.WTODAY:
-                f = (Fact) response.response;
+                final Fact n = (Fact) response.response;
+                final Date current = new Date(System.currentTimeMillis());
+                f = new List(){{
+                    setDt_txt(new SimpleDateFormat("dd.MM HH:mm").format(current));
+                    setMain(n.getMain());
+                    setClouds(n.getClouds());
+                    setDt(n.getDt());
+                    setSys(n.getSys());
+                    setWeather(n.getWeather());
+                    setWind(n.getWind());
+                }};
                 onDayChanged(f, today);
                 mStorage.getClothes(f);
                 break;
@@ -381,14 +391,31 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 rv_clothes.setAdapter(new RecomendationListAdapter(recommendations));
                 break;
             case ResponseType.WFORECASTS:
-                List<Forecasts> forecasts = (List<Forecasts>) response.response;
-                if (today == null){
-                    today = forecasts.get(0).getDate();
-                }
-                forecasts.get(0).getParts().getDay_short().setTemp(f.getTemp());
-                forecasts.get(0).getParts().getDay_short().setImageIcon(f.getImageIcon());
-                forecasts.get(0).getParts().getDay_short().setCondition(f.getCondition());
-                Weather_Adapter adapter = new Weather_Adapter(forecasts.subList(0 , 7), isF);
+                java.util.List<List> forecasts = (java.util.List<List>) response.response;
+//                if (today == null){
+//                    today = forecasts.get(0).getDate();
+//                }
+//                forecasts.get(0).getParts().getDay_short().setTemp(f.getTemp());
+//                forecasts.get(0).getParts().getDay_short().setImageIcon(f.getImageIcon());
+//                forecasts.get(0).getParts().getDay_short().setCondition(f.getCondition());
+                final Fact fact = mStorage.getResponse().getFact();
+                final Date d1 = new Date(System.currentTimeMillis());
+                Calendar c1 = Calendar.getInstance();
+                c1.setTime(d1);
+                Calendar c2 = Calendar.getInstance();
+                c2.setTime(new Date(forecasts.get(0).getDt() * 1000));
+                int start = Math.max(0, (c1.get(Calendar.HOUR_OF_DAY) / 3 - c2.get(Calendar.HOUR_OF_DAY) / 3));
+                forecasts.set(start, new List(){{
+                    setDt_txt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d1));
+                    setMain(fact.getMain());
+                    setClouds(fact.getClouds());
+                    setDt(fact.getDt());
+                    setSys(fact.getSys());
+                    setWeather(fact.getWeather());
+                    setWind(fact.getWind());
+                }});
+                today = parseDate(forecasts.get(start).getDt_txt());
+                Weather_Adapter adapter = new Weather_Adapter(forecasts.subList(0 , 40), isF);
                 adapter.setClickListener(this);
                 rv.setAdapter(adapter);
                 progressBar.setVisibility(ProgressBar.INVISIBLE);

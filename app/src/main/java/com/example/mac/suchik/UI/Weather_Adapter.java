@@ -10,17 +10,16 @@ import android.view.ViewGroup;
 import com.example.mac.suchik.R;
 import com.example.mac.suchik.Storage;
 import com.example.mac.suchik.UI.settings_page.VH_weather_adapter;
-import com.example.mac.suchik.WeatherData.Day_short;
 import com.example.mac.suchik.WeatherData.Fact;
-import com.example.mac.suchik.WeatherData.Forecasts;
+import com.example.mac.suchik.WeatherData.List;
+import com.example.mac.suchik.WeatherData.Sys;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
-    private List<Forecasts> mData;
+    private java.util.List<List> mData;
     private boolean isF;
     private ICallBackOnDayChanged itemClickListener;
 
@@ -29,10 +28,10 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
     }
     
     public interface ICallBackOnDayChanged{
-        void onDayChanged(Fact weather, String date);
+        void onDayChanged(List weather, String date);
     }
 
-    public Weather_Adapter(List<Forecasts> data, boolean isF) {
+    public Weather_Adapter(java.util.List<List> data, boolean isF) {
         super();
         this.isF = isF;
         mData = data;
@@ -49,16 +48,16 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
         //String date = "Fri, 22 Apr 2016 15:29:51 +0600";
         //String date = "2019-01-22";
 
-        String strCurrentDate = mData.get(position).getDate();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String strCurrentDate = mData.get(position).getDt_txt();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date newDate = null;
         try {
             newDate = format.parse(strCurrentDate);
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        format = new SimpleDateFormat("dd-MM");
-        String date = format.format(newDate);
+        format = new SimpleDateFormat("dd.MM HH:mm");
+        final String date = format.format(newDate);
         if (position == 0)
             holder.date.setText("Сегодня");
         else
@@ -67,41 +66,26 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Day_short dayShort = mData.get(position).getParts().getDay_short();
-                Fact fact = new Fact(){{
-                    setCloudness(dayShort.getCloudness());
-                    setTemp(dayShort.getTemp());
-                    setWind_speed(dayShort.getWind_speed());
-                    setPrec_type(dayShort.getPrec_type());
-                    setIcon(dayShort.getIcon());
-                    setImageIcon(dayShort.getImageIcon());
-                    setHumidity(dayShort.getHumidity());
-                    setCondition(dayShort.getCondition());
-                    setPressure_mm(dayShort.getPressure_mm());
-                    setFeels_like(dayShort.getFeels_like());
-                    setWind_dir(dayShort.getWind_dir());
-                }};
+                final List fact = mData.get(position);
                 (Storage.getOrCreate(null)).getClothes(fact);
-                itemClickListener.onDayChanged(fact, mData.get(position).getDate());
+                itemClickListener.onDayChanged(fact, date);
             }
         });
 
-        Float s = mData.get(position).getParts().getDay_short().getTemp();
+        double s = mData.get(position).getMain().getTemp();
         if (!isF) {
             if (s > 0) holder.temp_avg.setText(String.format("+" + "%.0f" + "°С", s));
             else holder.temp_avg.setText(String.format("%.0f °С", s));
         } else {
-            float far = (s * 9 / 5) + 32;
+            double far = (s * 9 / 5) + 32;
             if (far > 0) holder.temp_avg.setText(String.format("+" + "%.0f" + "°F", far));
             else holder.temp_avg.setText(String.format("%.0f" + "°F", far));
         }
-        if (mData.get(position).getParts().getDay_short().getImageIcon() != null) {
-
-            Drawable drawable = new PictureDrawable(mData.get(position).getParts().getDay_short().getImageIcon().renderToPicture());
-            holder.im.setImageDrawable(drawable);
+        if (mData.get(position).getWeather().get(0).getImageIcon() != null) {
+            holder.im.setImageBitmap(mData.get(position).getWeather().get(0).getImageIcon());
         }
         else {
-            String condition = mData.get(position).getParts().getDay().getCondition();
+            String condition = mData.get(position).getWeather().get(0).getMain();
             switch (condition) {
                 case "clear":
                     holder.im.setImageResource(R.drawable.sunny);
@@ -165,7 +149,7 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
     public int getItemCount() {
         return mData.size();
     }
-    public void setList(List<Forecasts> new_elements){
+    public void setList(java.util.List<List> new_elements){
         mData.clear();
         mData.addAll(new_elements);
         notifyDataSetChanged();

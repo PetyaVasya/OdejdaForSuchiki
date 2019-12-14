@@ -1,36 +1,47 @@
 package com.example.mac.suchik;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 import com.caverock.androidsvg.SVG;
 import com.caverock.androidsvg.SVGParseException;
-import com.example.mac.suchik.WeatherData.Forecasts;
+import com.example.mac.suchik.WeatherData.Fact;
+import com.example.mac.suchik.WeatherData.List;
 import com.example.mac.suchik.WeatherData.WeatherData;
 import com.google.gson.Gson;
 
 class Weather {
     private Request request;
-    private String strResponse;
+    private String forecastsResponse;
+    private String factResponse;
     private int type;
     private Gson gson;
+    private static final MessageFormat urlFormat = new MessageFormat("https://api.openweathermap.org/data/2.5/{0}?lat={1}&lon={2}&lang={3}&appid={4}&units=metric");
 
     Weather(String lat, String lon, Gson gson) throws IOException {
         Request request = new Request.Builder()
-                .url("https://api.weather.yandex.ru/v1/forecast?" + "lat=" + lat + "&lon=" + lon +
-                        "&hours=false&extra=true")
-                .addHeader("X-Yandex-API-Key", "dc5e1385-f72c-4276-8dc8-983002f0157a")
+                .url(urlFormat.format(new Object[]{"forecast", lat, lon, "ru", "683fffc67375308d022e9348f4eb18b1"}))
                 .build();
-        this.request = request;
-        this.strResponse = getResponse();
+        this.forecastsResponse = getResponse(request);
+        request = new Request.Builder()
+                .url(urlFormat.format(new Object[]{"weather", lat, lon, "ru", "683fffc67375308d022e9348f4eb18b1"}))
+                .build();
+        this.factResponse = getResponse(request);
         this.gson = gson;
     }
 
-    private String getResponse() throws IOException {
+    private String getResponse(Request request) throws IOException {
         OkHttpClient client = new OkHttpClient();
         try (okhttp3.Response response = client.newCall(request).execute()) {
             return response.body().string();
@@ -39,48 +50,45 @@ class Weather {
 
 
     Response parseWeather(){
-        Response response = new Response<>(ResponseType.GETW, gson.fromJson(strResponse, WeatherData.class));
+        Response response = new Response<>(ResponseType.GETW, gson.fromJson(forecastsResponse, WeatherData.class));
+        Fact fact = gson.fromJson(factResponse, Fact.class);
         WeatherData now = (WeatherData) response.response;
+        now.setFact(fact);
         URL url = null;
         try {
-            url = new URL("https://yastatic.net/weather/i/icons/blueye/color/svg/"
-                    + now.getFact().getIcon() + ".svg");
+            url = new URL("https://openweathermap.org/img/wn/"
+                    + now.getFact().getWeather().get(0).getIcon() + ".png");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
         if (url != null) {
+            Bitmap bmp = null;
             try {
-                SVG svg = null;
-                try {
-                    svg = SVG.getFromInputStream(url.openConnection() .getInputStream());
-                } catch (SVGParseException e) {
-                    e.printStackTrace();
-                }
-                now.getFact().setImageIcon(svg);
+                InputStream in = url.openStream();
+                bmp = BitmapFactory.decodeStream(in);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            now.getFact().getWeather().get(0).setImageIcon(bmp);
         }
-        for (Forecasts forecast: now.getForecasts()){
+        for (List forecast: now.getList()){
+            forecast.setDt_txt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(forecast.getDt() * 1000)));
             url = null;
             try {
-                url = new URL("https://yastatic.net/weather/i/icons/blueye/color/svg/"
-                        + forecast.getParts().getDay_short().getIcon() + ".svg");
+                url = new URL("https://openweathermap.org/img/wn/"
+                        + forecast.getWeather().get(0).getIcon() + ".png");
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
-            try {
-                if (url != null) {
-                    SVG svg = null;
-                    try {
-                        svg = SVG.getFromInputStream(url.openConnection() .getInputStream());
-                    } catch (SVGParseException e) {
-                        e.printStackTrace();
-                    }
-                    forecast.getParts().getDay_short().setImageIcon(svg);
+            if (url != null) {
+                Bitmap bmp = null;
+                try {
+                    InputStream in = url.openStream();
+                    bmp = BitmapFactory.decodeStream(in);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                forecast.getWeather().get(0).setImageIcon(bmp);
             }
         }
 
