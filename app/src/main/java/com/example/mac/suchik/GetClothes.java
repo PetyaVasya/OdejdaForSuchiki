@@ -4,22 +4,16 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
+
+import androidx.annotation.NonNull;
+
 import android.util.Log;
 import com.example.mac.suchik.WeatherData.List;
-import com.example.mac.suchik.WeatherData.WeatherData;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-
-import javax.security.auth.callback.Callback;
 
 public class GetClothes extends AsyncTask<Void, Void, Response> {
 

@@ -1,10 +1,9 @@
 package com.example.mac.suchik.UI;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,7 +72,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.VH_ShowItems> 
 
         //private ItemAdapter.ItemClickListener mClickListener;
         public TextView itemTextView;
-        public LinearLayout recyclerView;
+        public ConstraintLayout recyclerView;
         private ImageView deleteImageView;
 
         VH_ShowItems(View itemView) {

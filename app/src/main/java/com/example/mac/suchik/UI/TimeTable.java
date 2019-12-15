@@ -3,41 +3,36 @@ package com.example.mac.suchik.UI;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mac.suchik.ClothesData;
 import com.example.mac.suchik.DBOperations;
 import com.example.mac.suchik.R;
-import com.example.mac.suchik.UI.main_window.RecomendationListAdapter;
-import com.example.mac.suchik.UI.settings_page.TimesListAdapter;
+import com.example.mac.suchik.WeatherData.Sys;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class TimeTable extends Fragment implements AdapterView.OnItemSelectedListener, RadioGroup.OnCheckedChangeListener,
-        View.OnClickListener, ItemAdapter.ItemClickListener {
+        View.OnClickListener, ItemAdapter.ItemClickListener, AdapterView.OnItemClickListener {
     private String name, color;
     private int category = -1;
     private int minT = 100;
@@ -50,8 +45,8 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
     private RadioGroup radioGroupWind;
     private RadioGroup radioGroupCloud;
 
-    private EditText editTextName;
-    private EditText editTextColor;
+    private TextInputEditText editTextName;
+    private TextInputEditText editTextColor;
 
     private Button add;
 
@@ -75,8 +70,8 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
         super.onViewCreated(view, savedInstanceState);
 
 
-        editTextColor = view.findViewById(R.id.color);
-        editTextName = view.findViewById(R.id.name);
+        editTextColor = view.findViewById(R.id.color_edit);
+        editTextName = view.findViewById(R.id.name).findViewById(R.id.name_edit);
 
         add = view.findViewById(R.id.add_item);
         add.setOnClickListener(this);
@@ -96,9 +91,14 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
                 ArrayAdapter.createFromResource(getContext(), R.array.categories, android.R.layout.simple_spinner_item);
         adapterCategories.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner spinnerCategories = (Spinner) view.findViewById(R.id.spinner_category);
+        AutoCompleteTextView spinnerCategories = view.findViewById(R.id.spinner_category_edit);
         spinnerCategories.setAdapter(adapterCategories);
-        spinnerCategories.setOnItemSelectedListener(this);
+        spinnerCategories.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                category = position;
+            }
+        });
 
 
         // Настраиваем адаптер
@@ -106,9 +106,27 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
                 ArrayAdapter.createFromResource(getContext(), R.array.temperature, android.R.layout.simple_spinner_item);
         adapterTemp.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        Spinner spinnerTemp = (Spinner) view.findViewById(R.id.spinner_temp);
+        AutoCompleteTextView spinnerTemp = view.findViewById(R.id.spinner_temp_edit);
         spinnerTemp.setAdapter(adapterTemp);
-        spinnerTemp.setOnItemSelectedListener(this);
+        spinnerTemp.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                switch (position){
+                    case 0:
+                        minT = -30; maxT = -15;
+                        break;
+                    case 1:
+                        minT = -15; maxT = 0;
+                        break;
+                    case 2:
+                        minT = 0; maxT = 15;
+                        break;
+                    case 3:
+                        minT = 15; maxT = 30;
+                        break;
+                }
+            }
+        });
 
 
         ArrayList<String> items = dbOperations.getData("clothes", new String[]{"name"}, null, null, null, null, null);
@@ -123,31 +141,14 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
     }
 
     @Override
+    public void onItemClick(View view, int position) {
+        buildAlertMessage(adapter.getItem(position));
+        //Toast.makeText(getContext(), "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        switch (parent.getId()){
-            case R.id.spinner_temp:
-                switch (position){
-                    case 1:
-                        minT = -30; maxT = -15;
-                        break;
-                    case 2:
-                        minT = -15; maxT = 0;
-                        break;
-                    case 3:
-                        minT = 0; maxT = 15;
-                        break;
-                    case 4:
-                        minT = 15; maxT = 30;
-                        break;
-                }
-                String item = (String) parent.getItemAtPosition(position);
-                //Toast.makeText(getBaseContext(), "item = " + item, Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.spinner_category:
-                category = position;
-                //Toast.makeText(getBaseContext(), "item = " + position, Toast.LENGTH_SHORT).show();
-                break;
-        }
+
     }
 
     @Override
@@ -245,11 +246,11 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
         adapter.setList(dbOperations.getData("clothes", new String[]{"name"}, null, null, null, null, null));
     }
 
-    @Override
-    public void onItemClick(View view, int position) {
-        buildAlertMessage(adapter.getItem(position));
-        //Toast.makeText(getContext(), "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
-    }
+//    @Override
+//    public void onItemClick(View view, int position) {
+//        buildAlertMessage(adapter.getItem(position));
+//        //Toast.makeText(getContext(), "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
+//    }
 
     protected void buildAlertMessage(final String name) {
 
@@ -269,5 +270,10 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
                 });
         final AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
     }
 }

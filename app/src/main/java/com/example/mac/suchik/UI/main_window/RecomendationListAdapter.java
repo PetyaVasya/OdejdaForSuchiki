@@ -1,13 +1,12 @@
 package com.example.mac.suchik.UI.main_window;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.mac.suchik.Clothe;
 import com.example.mac.suchik.R;
 import com.example.mac.suchik.UI.settings_page.VH;
 
@@ -49,7 +48,7 @@ public class RecomendationListAdapter extends RecyclerView.Adapter<VH> {
                 holder.category.setImageResource(R.drawable.jeans);
                 break;
             case 5:
-                holder.category.setImageResource(R.drawable.shirt);
+                holder.category.setImageResource(R.drawable.tshirt);
                 break;
             case 6:
                 holder.category.setImageResource(R.drawable.boot);

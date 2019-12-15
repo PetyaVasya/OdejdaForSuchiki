@@ -6,9 +6,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -19,7 +19,7 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 public class MainActivityUI extends AppCompatActivity implements InternetDialogFragment.InternetDialogListener {
-    public android.support.v7.app.ActionBar actionbar;
+    public androidx.appcompat.app.ActionBar actionbar;
 
     public static final int MAIN_WINDOW_FRAGMENT = 1;
     public static final int SCHEDULE_WINDOW_FRAGMENT = 2;
@@ -114,6 +114,12 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Storage.getOrCreate(null).saveData();
     }
 
     public void onDialogPositiveClick(DialogFragment dialog) {

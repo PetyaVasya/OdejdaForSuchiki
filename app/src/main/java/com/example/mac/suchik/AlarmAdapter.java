@@ -1,19 +1,13 @@
 package com.example.mac.suchik;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.mac.suchik.AlarmHolder;
-import com.example.mac.suchik.R;
-import com.example.mac.suchik.UI.main_window.RecomendationListAdapter;
-import com.example.mac.suchik.UI.settings_page.VH;
-
 import java.util.ArrayList;
-import java.util.List;
 
 public class AlarmAdapter extends RecyclerView.Adapter<AlarmHolder> {
     TextView second;

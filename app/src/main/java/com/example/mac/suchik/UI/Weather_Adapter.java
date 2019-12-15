@@ -1,8 +1,6 @@
 package com.example.mac.suchik.UI;
 
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.PictureDrawable;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,9 +8,7 @@ import android.view.ViewGroup;
 import com.example.mac.suchik.R;
 import com.example.mac.suchik.Storage;
 import com.example.mac.suchik.UI.settings_page.VH_weather_adapter;
-import com.example.mac.suchik.WeatherData.Fact;
 import com.example.mac.suchik.WeatherData.List;
-import com.example.mac.suchik.WeatherData.Sys;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -73,13 +69,13 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
         });
 
         double s = mData.get(position).getMain().getTemp();
-        if (!isF) {
+        if (isF) {
             if (s > 0) holder.temp_avg.setText(String.format("+" + "%.0f" + "°С", s));
             else holder.temp_avg.setText(String.format("%.0f °С", s));
         } else {
             double far = (s * 9 / 5) + 32;
-            if (far > 0) holder.temp_avg.setText(String.format("+" + "%.0f" + "°F", far));
-            else holder.temp_avg.setText(String.format("%.0f" + "°F", far));
+            if (far > 0) holder.temp_avg.setText(String.format("+" + "%.0f" + "F", far));
+            else holder.temp_avg.setText(String.format("%.0f" + "F", far));
         }
         if (mData.get(position).getWeather().get(0).getImageIcon() != null) {
             holder.im.setImageBitmap(mData.get(position).getWeather().get(0).getImageIcon());

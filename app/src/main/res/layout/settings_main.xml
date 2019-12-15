@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="@color/background"
+    android:background="@drawable/backgtoundmusttop"
     android:layout_height="match_parent">
 
     <TextView
@@ -12,98 +12,169 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Настройки"
+        android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="40dp"
-        android:textAlignment="center"/>
+        app:layout_constraintBottom_toTopOf="@+id/monitored_switch"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <Switch
+    <RadioGroup
         android:id="@+id/monitored_switch"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/pink_outline"
+        android:checkedButton="@+id/C"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/textView9"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title">
+
+        <RadioButton
+            android:id="@+id/C"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="1dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="1dp"
+            android:layout_weight="1"
+            android:background="@drawable/custom_switch_background"
+            android:button="@null"
+            android:gravity="center"
+            android:checked="true"
+            android:text="°С"
+            android:textColor="@drawable/custom_switch_text_colors"
+            android:textSize="40dp" />
+
+        <RadioButton
+            android:id="@+id/F"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="1dp"
+            android:layout_marginRight="1dp"
+            android:layout_marginBottom="1dp"
+            android:layout_weight="1"
+            android:textSize="40dp"
+            android:background="@drawable/custom_switch_background"
+            android:button="@null"
+            android:gravity="center"
+            android:text="F"
+            android:textColor="@drawable/custom_switch_text_colors" />
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/textView9"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="°С"
-        android:textOff="°С"
-        android:textOn="°F"
+        android:paddingStart="10dp"
+        android:text="Отображаемые категории:"
+        android:textColor="#000"
         android:textSize="20dp"
+        app:layout_constraintTop_toBottomOf="@+id/monitored_switch" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="20dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/monitored_switch">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Блокировать эти категории:"
-            android:textColor="#000"
-            android:textSize="20dp"/>
-
-        <CheckBox
-            android:id="@+id/head"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Головные уборы" />
+        app:layout_constraintTop_toBottomOf="@+id/textView9"
+        app:layout_constraintVertical_bias="0.120000005">
 
         <CheckBox
             android:id="@+id/glove"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Перчатки" />
-
-        <CheckBox
-            android:id="@+id/scarf"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Шарфы"/>
-
-        <CheckBox
-            android:id="@+id/coat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Верхняя одежда" />
+            app:layout_constraintBottom_toTopOf="@+id/jeans"
+            app:layout_constraintEnd_toStartOf="@+id/scarf"
+            app:layout_constraintStart_toEndOf="@+id/head"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <CheckBox
             android:id="@+id/jeans"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Брюки" />
-
-        <CheckBox
-            android:id="@+id/shirt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Футболки" />
-
-        <CheckBox
-            android:id="@+id/boot"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Обувь" />
-
-        <CheckBox
-            android:id="@+id/eyeglasses"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Аксессуары" />
-
-        <CheckBox
-            android:id="@+id/jogger_pants"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Термобелье" />
+            app:layout_constraintBottom_toTopOf="@+id/eyeglasses"
+            app:layout_constraintEnd_toStartOf="@+id/shirt"
+            app:layout_constraintStart_toEndOf="@+id/coat"
+            app:layout_constraintTop_toBottomOf="@+id/glove" />
 
         <CheckBox
             android:id="@+id/sweater"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Кофты" />
-    </LinearLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/jogger_pants"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/eyeglasses"
+            app:layout_constraintTop_toBottomOf="@+id/eyeglasses" />
 
+        <CheckBox
+            android:id="@+id/jogger_pants"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/sweater"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/eyeglasses"
+            app:layout_constraintTop_toBottomOf="@+id/shirt" />
 
+        <CheckBox
+            android:id="@+id/shirt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/jogger_pants"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/jeans"
+            app:layout_constraintTop_toBottomOf="@+id/scarf" />
 
+        <CheckBox
+            android:id="@+id/coat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/boot"
+            app:layout_constraintEnd_toStartOf="@+id/jeans"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/head" />
 
-</android.support.constraint.ConstraintLayout>
+        <CheckBox
+            android:id="@+id/eyeglasses"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/sweater"
+            app:layout_constraintEnd_toStartOf="@+id/jogger_pants"
+            app:layout_constraintStart_toEndOf="@+id/boot"
+            app:layout_constraintTop_toBottomOf="@+id/jeans" />
+
+        <CheckBox
+            android:id="@+id/boot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/sweater"
+            app:layout_constraintEnd_toStartOf="@+id/eyeglasses"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/coat" />
+
+        <CheckBox
+            android:id="@+id/head"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/coat"
+            app:layout_constraintEnd_toStartOf="@+id/glove"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <CheckBox
+            android:id="@+id/scarf"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/shirt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/glove"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

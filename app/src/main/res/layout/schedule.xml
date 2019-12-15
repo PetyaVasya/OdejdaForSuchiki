@@ -5,13 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".UI.MainActivityUI"
-    android:background="@color/background">
+    android:background="@drawable/backgtoundmusttop">
 
     <TimePicker
         android:layout_width="match_parent"
         android:id="@+id/timePicker"
-        android:layout_height="wrap_content"
-        android:background="@color/background"/>
+        android:layout_height="wrap_content"/>
 
     <Button
         android:id="@+id/alarm_on"
@@ -27,12 +26,12 @@
         android:layout_below="@+id/timePicker"
         android:layout_alignRight="@+id/timePicker"
         android:text="Остановить" />
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:id="@+id/listOfAlarms"
         android:layout_height="wrap_content"
         android:layout_below="@+id/updateTimeText">
-    </android.support.v7.widget.RecyclerView>
+    </androidx.recyclerview.widget.RecyclerView>
 
     <TextView
         android:id="@+id/updateTimeText"

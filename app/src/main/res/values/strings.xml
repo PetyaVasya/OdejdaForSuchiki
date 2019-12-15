@@ -6,7 +6,6 @@
     <string name="alarm_on_toast">lalka</string>
     <string name="alarm_off_toast">lylka</string>
     <string-array name="categories">
-        <item>Категория</item>
         <item>Головные уборы</item>
         <item>Перчатки</item>
         <item>Шарфы</item>
@@ -19,7 +18,6 @@
         <item>Кофты</item>
     </string-array>
     <string-array name="temperature">
-        <item>Температура</item>
         <item>Меньше -15°С</item>
         <item>-15°С — 0°С</item>
         <item>0°С — 15°С</item>

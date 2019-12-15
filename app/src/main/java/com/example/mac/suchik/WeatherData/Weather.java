@@ -11,6 +11,7 @@ public class Weather {
     private String description;
     private String icon;
     private Bitmap imageIcon;
+    private String strImage;
 
     public Integer getId() {
         return id;
@@ -50,5 +51,13 @@ public class Weather {
 
     public void setImageIcon(Bitmap imageIcon) {
         this.imageIcon = imageIcon;
+    }
+
+    public String getStrImage() {
+        return strImage;
+    }
+
+    public void setStrImage(String strImage) {
+        this.strImage = strImage;
     }
 }

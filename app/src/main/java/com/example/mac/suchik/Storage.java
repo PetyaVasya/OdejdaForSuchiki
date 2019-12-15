@@ -2,31 +2,37 @@ package com.example.mac.suchik;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 
 import com.example.mac.suchik.WeatherData.Fact;
 import com.example.mac.suchik.WeatherData.List;
+import com.example.mac.suchik.WeatherData.Sys;
 import com.example.mac.suchik.WeatherData.WeatherData;
 import com.google.gson.Gson;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class Storage implements Callbacks{
     private WeatherData response;
     private String[] position;
+    private String[] community;
+    private ArrayList<String> clothes;
     private HashMap<Integer, java.util.List<Callbacks>> type_callback_rels = new LinkedHashMap<>();
     private Gson gson;
     private Context mCtx;
     private SharedPreferences sp;
     private HashMap<String, Boolean> executed;
-
-
-    private GetClothes getClothes;
 
     private static Storage _instance;
 
@@ -49,9 +55,20 @@ public class Storage implements Callbacks{
             put("GF", false);
             put("GC", false);
         }};
+        response = null;
         if (!Objects.equals(sp.getString("weather", null), null)){
             response =  gson.fromJson(sp.getString("weather", null),
                             WeatherData.class);
+            int l = response.getList().size() - 1;
+//            ArrayList<String> s = new ArrayList<>(sp.getStringSet("bitmaps", null));
+//            System.out.println(response.getList());
+            for (List list:response.getList()) {
+                list.getWeather().get(0).setImageIcon(getBitmapFromString(list.getWeather().get(0).getStrImage()));
+                list.getWeather().get(0).setStrImage(null);
+            }
+            response.getFact().getWeather().get(0).setImageIcon(getBitmapFromString(response.getFact().getWeather().get(0).getStrImage()));
+            response.getFact().getWeather().get(0).setStrImage(null);
+//            response.getFact().getWeather().get(0).setImageIcon(getBitmapFromString(s.get(l)));
         }
         if (!Objects.equals(sp.getString("pos_lat",
                 null), null) && !Objects.equals(sp.getString("pos_lon",
@@ -60,11 +77,22 @@ public class Storage implements Callbacks{
                     null), sp.getString("pos_lon",
                     null)};
         }
+        community = null;
+        if (position != null)
+            community = new String[]{position[0], position[1], sp.getString("current_city", "")};
+        clothes = null;
+        if (!Objects.equals(sp.getStringSet("last_clothes", null), null)){
+            clothes = new ArrayList<>(sp.getStringSet("last_clothes", null));
+        }
     }
 
     public WeatherData getResponse() {
         return response;
     }
+
+    public String[] getLastCommunity(){ return community;}
+
+    public ArrayList<String> getLastClothes(){ return clothes;}
 
     public void updateWeather(boolean is_blocked){
         if (position != null && position[0] != null && position[1] != null) {
@@ -129,6 +157,12 @@ public class Storage implements Callbacks{
     public void saveData(){
         SharedPreferences.Editor editor = sp.edit();
         if (response != null){
+            for (List list: response.getList()) {
+                list.getWeather().get(0).setStrImage(getStringFromBitmap(list.getWeather().get(0).getImageIcon()));
+                list.getWeather().get(0).setImageIcon(null);
+            }
+            response.getFact().getWeather().get(0).setStrImage(getStringFromBitmap(response.getFact().getWeather().get(0).getImageIcon()));
+            response.getFact().getWeather().get(0).setImageIcon(null);
             editor.putString("weather", gson.toJson(response));
             editor.apply();
         }
@@ -137,6 +171,11 @@ public class Storage implements Callbacks{
             editor.putString("pos_lat", position[0]);
             editor.putString("pos_lon", position[1]);
         }
+        if (community != null)
+            editor.putString("current_city", community[2]);
+        if (clothes != null)
+            editor.putStringSet("last_clothes", new HashSet<>(clothes));
+        editor.commit();
     }
 
     public void getWeatherToday(){
@@ -188,10 +227,10 @@ public class Storage implements Callbacks{
                     for (Callbacks callbacks: list) {
                         switch (i) {
                             case ResponseType.GETW:
-                                callbacks.onLoad(new Response<>(ResponseType.WFORECASTS,
-                                        ((WeatherData) response.response).getList()));
                                 callbacks.onLoad(new Response<>(ResponseType.WTODAY,
                                         ((WeatherData) response.response).getFact()));
+                                callbacks.onLoad(new Response<>(ResponseType.WFORECASTS,
+                                        ((WeatherData) response.response).getList()));
                                 break;
                             case ResponseType.WTODAY:
                                 callbacks.onLoad(new Response<>(ResponseType.WTODAY,
@@ -262,6 +301,7 @@ public class Storage implements Callbacks{
                 if (type_callback_rels.get(ResponseType.CLOTHES) == null)
                     type_callback_rels.put(ResponseType.CLOTHES, new ArrayList<Callbacks>());
                 list = type_callback_rels.get(ResponseType.CLOTHES);
+                clothes = (ArrayList<String>) response.response;
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(response);
                 }
@@ -271,11 +311,28 @@ public class Storage implements Callbacks{
                 if (type_callback_rels.get(ResponseType.COMMUNITY) == null)
                     type_callback_rels.put(ResponseType.COMMUNITY, new ArrayList<Callbacks>());
                 list = type_callback_rels.get(ResponseType.COMMUNITY);
+                community = (String[]) response.response;
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(response);
                 }
                 executed.put("GCC", false);
                 break;
         }
+    }
+
+    private Bitmap getBitmapFromString(String stringPicture) {
+        byte[] decodedString = Base64.decode(stringPicture, Base64.DEFAULT);
+        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+        return decodedByte;
+    }
+    private String getStringFromBitmap(Bitmap bitmapPicture) {
+        final int COMPRESSION_QUALITY = 100;
+        String encodedImage;
+        ByteArrayOutputStream byteArrayBitmapStream = new ByteArrayOutputStream();
+        bitmapPicture.compress(Bitmap.CompressFormat.PNG, COMPRESSION_QUALITY,
+                byteArrayBitmapStream);
+        byte[] b = byteArrayBitmapStream.toByteArray();
+        encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+        return encodedImage;
     }
 }

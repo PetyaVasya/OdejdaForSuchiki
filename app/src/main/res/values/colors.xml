@@ -7,4 +7,6 @@
     <color name="backgroundCcolor">#46AAE8</color>
     <color name="backgroundcolor">#DCA43E</color>
     <color name="background">#BEE0F4</color>
+    <color name="off">#D52F6D</color>
+    <color name="on">#6B8F5A</color>
 </resources>
