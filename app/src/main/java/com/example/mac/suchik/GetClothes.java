@@ -11,6 +11,7 @@ import android.util.Log;
 import com.example.mac.suchik.WeatherData.List;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
@@ -53,10 +54,10 @@ public class GetClothes extends AsyncTask<Void, Void, Response> {
         names.put(2, "scarf");
         names.put(3, "coat");
         names.put(4, "jeans");
-        names.put(5, "shirt");
+        names.put(5, "tshirt");
         names.put(6, "boot");
         names.put(7, "eyeglasses");
-        names.put(8, "jogger_pants");
+        names.put(8, "joggerpants");
         names.put(9, "sweater");
 
         settings = mContext.getSharedPreferences("settings", Context.MODE_PRIVATE);

@@ -1,6 +1,7 @@
 package com.example.mac.suchik;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
@@ -39,6 +40,11 @@ public class Community extends AsyncTask<Void, Void, Response> {
         } catch (IOException e) {
             Log.e("Community", "Impossible to connect to Geocoder", e);
         }
+        SharedPreferences sp = mCtx.getSharedPreferences(mCtx.getString(R.string.weather_preferences), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        if (result != null)
+            editor.putString("current_city", result[2]);
+        editor.apply();
         return new Response<>(ResponseType.COMMUNITY, result);
     }
 

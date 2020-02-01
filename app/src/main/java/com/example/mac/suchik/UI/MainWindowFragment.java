@@ -2,12 +2,14 @@ package com.example.mac.suchik.UI;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,6 +56,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
+
+import static android.content.Context.ACTIVITY_SERVICE;
+import static androidx.core.content.ContextCompat.getSystemService;
 
 public class MainWindowFragment extends Fragment implements Callbacks, AdapterView.OnItemSelectedListener, Weather_Adapter.ICallBackOnDayChanged {
     public static Storage mStorage;
@@ -141,7 +146,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     public void onStart() {
         super.onStart();
         checkInternetConnection = new CheckInternetConnection(getContext());
-        checkInternetConnection.execute();
+        checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        Geoposition geoposition = new Geoposition(getContext());
 //        String[] position = geoposition.start();
 //        //mStorage.setPosition("55.45", "37.36");
@@ -206,11 +211,12 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
 
         SharedPreferences settings = getContext().getSharedPreferences("settings", Context.MODE_PRIVATE);
         isF = settings.getBoolean("degrees", false);
-        if (mStorage.getResponse() != null & mStorage.getLastCommunity() != null & mStorage.getLastClothes() != null) {
-            onLoad(new Response(ResponseType.COMMUNITY, mStorage.getLastCommunity()));
-            onLoad(new Response(ResponseType.CLOTHES, mStorage.getLastClothes()));
-            onLoad(new Response(ResponseType.WTODAY, mStorage.getResponse().getFact()));
-            onLoad(new Response(ResponseType.WFORECASTS, mStorage.getResponse().getList()));
+        Object[] res = mStorage.getSavedData();
+        if (res[0] != null & res[1] != null) {
+            onLoad(new Response(ResponseType.COMMUNITY, (String[])res[1]));
+            WeatherData response = (WeatherData) res[0];
+            onLoad(new Response(ResponseType.WTODAY, response.getFact()));
+            onLoad(new Response(ResponseType.WFORECASTS, response.getList()));
         }
     }
 
@@ -405,7 +411,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
 //                forecasts.get(0).getParts().getDay_short().setTemp(f.getTemp());
 //                forecasts.get(0).getParts().getDay_short().setImageIcon(f.getImageIcon());
 //                forecasts.get(0).getParts().getDay_short().setCondition(f.getCondition());
-                final Fact fact = mStorage.getResponse().getFact();
+                final List fact = f;
                 final Date d1 = new Date(System.currentTimeMillis());
                 Calendar c1 = Calendar.getInstance();
                 c1.setTime(d1);
@@ -438,7 +444,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 break;
             case ResponseType.GEOERROR:
                 checkInternetConnection = new CheckInternetConnection(getContext());
-                checkInternetConnection.execute();
+                checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 break;
         }
     }
@@ -468,7 +474,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 public void onClick(DialogInterface dialog, int which) {
                     checkInternetConnection = new CheckInternetConnection(getContext(),
                             input.getText().toString());
-                    checkInternetConnection.execute();
+                    checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             });
             builder.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
@@ -484,7 +490,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         else {
             checkInternetConnection = new CheckInternetConnection(getContext(),
                     cityPos.get(cities.get(position - 1)));
-            checkInternetConnection.execute();
+            checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             spinnerLatest = position;
         }
     }
@@ -492,5 +498,12 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
+    }
+
+    private ActivityManager.MemoryInfo getAvailableMemory() {
+        ActivityManager activityManager = (ActivityManager) getActivity().getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+        return memoryInfo;
     }
 }

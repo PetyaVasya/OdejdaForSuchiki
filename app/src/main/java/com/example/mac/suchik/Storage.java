@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.util.Base64;
 
 import com.example.mac.suchik.WeatherData.Fact;
@@ -24,10 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class Storage implements Callbacks{
-    private WeatherData response;
     private String[] position;
-    private String[] community;
-    private ArrayList<String> clothes;
     private HashMap<Integer, java.util.List<Callbacks>> type_callback_rels = new LinkedHashMap<>();
     private Gson gson;
     private Context mCtx;
@@ -55,10 +53,20 @@ public class Storage implements Callbacks{
             put("GF", false);
             put("GC", false);
         }};
-        response = null;
+        if (!Objects.equals(sp.getString("pos_lat",
+                null), null) && !Objects.equals(sp.getString("pos_lon",
+                null), null)){
+            position = new String[]{sp.getString("pos_lat",
+                    null), sp.getString("pos_lon",
+                    null)};
+        }
+    }
+
+    public Object[] getSavedData(){
+        WeatherData response = null;
         if (!Objects.equals(sp.getString("weather", null), null)){
             response =  gson.fromJson(sp.getString("weather", null),
-                            WeatherData.class);
+                    WeatherData.class);
             int l = response.getList().size() - 1;
 //            ArrayList<String> s = new ArrayList<>(sp.getStringSet("bitmaps", null));
 //            System.out.println(response.getList());
@@ -70,34 +78,21 @@ public class Storage implements Callbacks{
             response.getFact().getWeather().get(0).setStrImage(null);
 //            response.getFact().getWeather().get(0).setImageIcon(getBitmapFromString(s.get(l)));
         }
-        if (!Objects.equals(sp.getString("pos_lat",
-                null), null) && !Objects.equals(sp.getString("pos_lon",
-                null), null)){
-            position = new String[]{sp.getString("pos_lat",
-                    null), sp.getString("pos_lon",
-                    null)};
-        }
-        community = null;
+
+        String[] community = null;
         if (position != null)
             community = new String[]{position[0], position[1], sp.getString("current_city", "")};
-        clothes = null;
+        ArrayList<String> clothes = null;
         if (!Objects.equals(sp.getStringSet("last_clothes", null), null)){
             clothes = new ArrayList<>(sp.getStringSet("last_clothes", null));
         }
+        return new Object[]{response, community, clothes};
     }
-
-    public WeatherData getResponse() {
-        return response;
-    }
-
-    public String[] getLastCommunity(){ return community;}
-
-    public ArrayList<String> getLastClothes(){ return clothes;}
 
     public void updateWeather(boolean is_blocked){
         if (position != null && position[0] != null && position[1] != null) {
-            WrapperApi request = new WrapperApi(position[0], position[1], Storage.this, gson);
-            request.execute();
+            WrapperApi request = new WrapperApi(mCtx, position[0], position[1], Storage.this, gson);
+            request.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             if (is_blocked) {
                 try {
                     request.get();
@@ -121,14 +116,15 @@ public class Storage implements Callbacks{
     public void getCurrentCommunity() {
             if (position != null) {
                 executed.put("GCC", true);
-                new Community(mCtx, position, Storage.this).execute();
+                new Community(mCtx, position, Storage.this).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
     }
 
     public void getClothes(List weather) {
+        System.out.println(executed.get("GC"));
         if (!executed.get("GC")) {
                 executed.put("GC", true);
-                new GetClothes(mCtx, Storage.this, weather).execute();
+                (new GetClothes(mCtx, Storage.this, weather)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
     public void setPosition(String lat, String lon){
@@ -156,70 +152,67 @@ public class Storage implements Callbacks{
 
     public void saveData(){
         SharedPreferences.Editor editor = sp.edit();
-        if (response != null){
-            for (List list: response.getList()) {
-                list.getWeather().get(0).setStrImage(getStringFromBitmap(list.getWeather().get(0).getImageIcon()));
-                list.getWeather().get(0).setImageIcon(null);
-            }
-            response.getFact().getWeather().get(0).setStrImage(getStringFromBitmap(response.getFact().getWeather().get(0).getImageIcon()));
-            response.getFact().getWeather().get(0).setImageIcon(null);
-            editor.putString("weather", gson.toJson(response));
-            editor.apply();
-        }
+//        if (response != null){
+//            for (List list: response.getList()) {
+//                list.getWeather().get(0).setStrImage(getStringFromBitmap(list.getWeather().get(0).getImageIcon()));
+//                list.getWeather().get(0).setImageIcon(null);
+//            }
+//            response.getFact().getWeather().get(0).setStrImage(getStringFromBitmap(response.getFact().getWeather().get(0).getImageIcon()));
+//            response.getFact().getWeather().get(0).setImageIcon(null);
+//            editor.putString("weather", gson.toJson(response));
+//            editor.apply();
+//        }
         if (position != null && position[0] != null && position[1] != null)
         {
             editor.putString("pos_lat", position[0]);
             editor.putString("pos_lon", position[1]);
         }
-        if (community != null)
-            editor.putString("current_city", community[2]);
-        if (clothes != null)
-            editor.putStringSet("last_clothes", new HashSet<>(clothes));
+//        if (community != null)
+//            editor.putString("current_city", community[2]);
+//        if (clothes != null)
+//            editor.putStringSet("last_clothes", new HashSet<>(clothes));
         editor.commit();
     }
 
-    public void getWeatherToday(){
-        if (!executed.get("GT")){
-            if (response == null && !executed.get("GF")){
-                updateWeather(false);
-            } else{
-                if (position != null && position[0] != null && position[1] != null) {
-                    executed.put("GT", true);
-                    onLoad(new Response<>(ResponseType.WTODAY, response.getFact()));
-                    executed.put("GT", false);
-                }
-            }
-        }
-    }
-
-    public void getIconBitmap(String url) {
-
-    }
-
-    public void getWeatherForecasts() {
-        if (! executed.get("GF")){
-            if (response == null && !executed.get("GT")){
-                updateWeather(false);
-            } else{
-                if (position != null && position[0] != null && position[1] != null){
-                    executed.put("GF", true);
-                    onLoad(new Response<>(ResponseType.WFORECASTS, response.getList()));
-                    executed.put("GF", false);
-                }
-            }
-        }
-    }
+//    public void getWeatherToday(){
+//        if (!executed.get("GT")){
+//            if (!executed.get("GF")){
+//                updateWeather(false);
+////            } else{
+////                if (position != null && position[0] != null && position[1] != null) {
+////                    executed.put("GT", true);
+////                    onLoad(new Response<>(ResponseType.WTODAY, response.getFact()));
+////                    executed.put("GT", false);
+////                }
+//            }
+//        }
+//    }
+//
+//    public void getIconBitmap(String url) {
+//
+//    }
+//
+//    public void getWeatherForecasts() {
+//        if (! executed.get("GF")){
+//            if (response == null && !executed.get("GT")){
+//                updateWeather(false);
+//            } else{
+//                if (position != null && position[0] != null && position[1] != null){
+//                    executed.put("GF", true);
+//                    onLoad(new Response<>(ResponseType.WFORECASTS, response.getList()));
+//                    executed.put("GF", false);
+//                }
+//            }
+//        }
+//    }
 
     @Override
     public void onLoad(Response response) {
-        if (response.response != null && response.response.getClass() == WeatherData.class)
-            this.response = (WeatherData) response.response;
         if (response.response == null)
             response.type = ResponseType.ERROR;
         java.util.List<Callbacks> list = null;
         switch (response.type){
             case ResponseType.GETW:
-                this.response = (WeatherData) response.response;
                 for (int i = 1; i < 4; i++){
                     if (type_callback_rels.get(i) == null) type_callback_rels.put(i,
                             new ArrayList<Callbacks>());
@@ -247,8 +240,7 @@ public class Storage implements Callbacks{
                 executed.put("GF", false);
                 break;
             case ResponseType.WTODAY:
-                this.response = (WeatherData) response.response;
-                final Fact n = this.response.getFact();
+                final Fact n = ((WeatherData) response.response).getFact();
                 final Date current = new Date(System.currentTimeMillis());
                 getClothes(new List(){{
                     setDt_txt(new SimpleDateFormat("dd.MM HH:mm").format(current));
@@ -301,7 +293,6 @@ public class Storage implements Callbacks{
                 if (type_callback_rels.get(ResponseType.CLOTHES) == null)
                     type_callback_rels.put(ResponseType.CLOTHES, new ArrayList<Callbacks>());
                 list = type_callback_rels.get(ResponseType.CLOTHES);
-                clothes = (ArrayList<String>) response.response;
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(response);
                 }
@@ -311,12 +302,13 @@ public class Storage implements Callbacks{
                 if (type_callback_rels.get(ResponseType.COMMUNITY) == null)
                     type_callback_rels.put(ResponseType.COMMUNITY, new ArrayList<Callbacks>());
                 list = type_callback_rels.get(ResponseType.COMMUNITY);
-                community = (String[]) response.response;
                 for (Callbacks callbacks: list) {
                     callbacks.onLoad(response);
                 }
                 executed.put("GCC", false);
                 break;
+            case ResponseType.ERROR:
+                System.out.println("ERROR");
         }
     }
 
@@ -324,15 +316,5 @@ public class Storage implements Callbacks{
         byte[] decodedString = Base64.decode(stringPicture, Base64.DEFAULT);
         Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
         return decodedByte;
-    }
-    private String getStringFromBitmap(Bitmap bitmapPicture) {
-        final int COMPRESSION_QUALITY = 100;
-        String encodedImage;
-        ByteArrayOutputStream byteArrayBitmapStream = new ByteArrayOutputStream();
-        bitmapPicture.compress(Bitmap.CompressFormat.PNG, COMPRESSION_QUALITY,
-                byteArrayBitmapStream);
-        byte[] b = byteArrayBitmapStream.toByteArray();
-        encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-        return encodedImage;
     }
 }
