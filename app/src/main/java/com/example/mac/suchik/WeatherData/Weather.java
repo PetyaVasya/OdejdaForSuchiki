@@ -10,8 +10,6 @@ public class Weather {
     private String main;
     private String description;
     private String icon;
-    private Bitmap imageIcon;
-    private String strImage;
 
     public Integer getId() {
         return id;
@@ -45,19 +43,4 @@ public class Weather {
         this.icon = icon;
     }
 
-    public Bitmap getImageIcon() {
-        return imageIcon;
-    }
-
-    public void setImageIcon(Bitmap imageIcon) {
-        this.imageIcon = imageIcon;
-    }
-
-    public String getStrImage() {
-        return strImage;
-    }
-
-    public void setStrImage(String strImage) {
-        this.strImage = strImage;
-    }
 }

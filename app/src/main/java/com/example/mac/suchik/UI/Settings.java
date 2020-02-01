@@ -30,6 +30,7 @@ import android.widget.RadioGroup;
 import android.widget.Switch;
 
 import com.example.mac.suchik.R;
+import com.example.mac.suchik.WeatherData.Main;
 
 import java.util.Objects;
 
@@ -90,8 +91,7 @@ public class Settings extends Fragment {
         Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        System.out.println(size.x);
-        int w = size.x / 4;
+        int w = (int)(Math.round(size.x / 8.0 / 32)) * 32;
         int h = w;
         head = view.findViewById(R.id.head);
         head.setButtonDrawable(resizeDrawable(getResources().getDrawable(R.drawable.head), w, h));
@@ -163,8 +163,7 @@ public class Settings extends Fragment {
             Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
             Point size = new Point();
             display.getSize(size);
-            System.out.println(size.x);
-            int w = size.x / 4;
+            int w = (int)(Math.round(size.x / 8.0 / 32)) * 32;
             if (!isChecked)
                 buttonView.setButtonDrawable(resizeDrawable(getImage(getContext(), settingName), w, w));
 //            Objects.requireNonNull(CompoundButtonCompat.getButtonDrawable(button)).setColorFilter(null);

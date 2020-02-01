@@ -46,7 +46,6 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
     private RadioGroup radioGroupCloud;
 
     private TextInputEditText editTextName;
-    private TextInputEditText editTextColor;
 
     private Button add;
 
@@ -70,7 +69,6 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
         super.onViewCreated(view, savedInstanceState);
 
 
-        editTextColor = view.findViewById(R.id.color_edit);
         editTextName = view.findViewById(R.id.name).findViewById(R.id.name_edit);
 
         add = view.findViewById(R.id.add_item);
@@ -219,7 +217,6 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
             Toast.makeText(getContext(), "Выберете защиту от солнца", Toast.LENGTH_SHORT).show();
             return;
         }
-        color = editTextColor.getText().toString();
 //        if (color.isEmpty()){
 //            Toast.makeText(getBaseContext(), "Введите цвет", Toast.LENGTH_SHORT).show();
 //            return;
@@ -229,14 +226,13 @@ public class TimeTable extends Fragment implements AdapterView.OnItemSelectedLis
 
         item = new ClothesData();
 
-        item.category = category - 1;
+        item.category = category;
         item.name = name;
         item.minTemp = minT;
         item.maxTemp = maxT;
         item.rain = rain;
         item.wind = wind;
         item.cloud = cloud;
-        item.color = color;
 
 
 

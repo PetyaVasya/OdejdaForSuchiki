@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.mac.suchik.CheckInternetConnection;
 import com.example.mac.suchik.InternetDialogFragment;
 import com.example.mac.suchik.R;
 import com.example.mac.suchik.Storage;
@@ -25,6 +27,7 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
     public static final int SCHEDULE_WINDOW_FRAGMENT = 2;
     public static final int MY_LIST = 3;
     public static final int SETTINGS = 4;
+    private InternetDialogFragment internetDialogFragment = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +35,7 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
         setContentView(R.layout.activity_main);
         actionbar = getSupportActionBar();
         actionbar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#84B3D5")));//change color of action bar
-        Storage.getOrCreate(getApplicationContext());
+        Storage storage = Storage.getOrCreate(getApplicationContext());
         actionbar.setTitle("YoW");
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
 			.build();
@@ -44,6 +47,13 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
 //        }
 //        else if (savedInstanceState == null) {
             openFragment(MAIN_WINDOW_FRAGMENT);
+        Object[] res = storage.getSavedData();
+        if (res[0] == null)
+            new CheckInternetConnection(getApplicationContext()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        else if (res[1] != null) {
+            String[] pos = (String[])res[1];
+            new CheckInternetConnection(getApplicationContext(), new String[]{pos[0], pos[1]}).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
 //        }
     }
 
@@ -123,8 +133,9 @@ public class MainActivityUI extends AppCompatActivity implements InternetDialogF
     }
 
     public void onDialogPositiveClick(DialogFragment dialog) {
-        if (!hasConnection(this)) {
-            (new InternetDialogFragment()).show(getSupportFragmentManager(), "WAW");
+        if (!hasConnection(this) && (internetDialogFragment == null || !internetDialogFragment.isVisible())) {
+            internetDialogFragment = new InternetDialogFragment();
+            internetDialogFragment.show(getSupportFragmentManager(), "WAW");
         }
         else{
             openFragment(MAIN_WINDOW_FRAGMENT);

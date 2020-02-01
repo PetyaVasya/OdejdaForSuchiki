@@ -67,15 +67,6 @@ public class Storage implements Callbacks{
         if (!Objects.equals(sp.getString("weather", null), null)){
             response =  gson.fromJson(sp.getString("weather", null),
                     WeatherData.class);
-            int l = response.getList().size() - 1;
-//            ArrayList<String> s = new ArrayList<>(sp.getStringSet("bitmaps", null));
-//            System.out.println(response.getList());
-            for (List list:response.getList()) {
-                list.getWeather().get(0).setImageIcon(getBitmapFromString(list.getWeather().get(0).getStrImage()));
-                list.getWeather().get(0).setStrImage(null);
-            }
-            response.getFact().getWeather().get(0).setImageIcon(getBitmapFromString(response.getFact().getWeather().get(0).getStrImage()));
-            response.getFact().getWeather().get(0).setStrImage(null);
 //            response.getFact().getWeather().get(0).setImageIcon(getBitmapFromString(s.get(l)));
         }
 
@@ -121,7 +112,6 @@ public class Storage implements Callbacks{
     }
 
     public void getClothes(List weather) {
-        System.out.println(executed.get("GC"));
         if (!executed.get("GC")) {
                 executed.put("GC", true);
                 (new GetClothes(mCtx, Storage.this, weather)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -302,13 +292,13 @@ public class Storage implements Callbacks{
                 if (type_callback_rels.get(ResponseType.COMMUNITY) == null)
                     type_callback_rels.put(ResponseType.COMMUNITY, new ArrayList<Callbacks>());
                 list = type_callback_rels.get(ResponseType.COMMUNITY);
-                for (Callbacks callbacks: list) {
-                    callbacks.onLoad(response);
+                for (Callbacks callback: list) {
+                    callback.onLoad(response);
                 }
                 executed.put("GCC", false);
                 break;
             case ResponseType.ERROR:
-                System.out.println("ERROR");
+                break;
         }
     }
 

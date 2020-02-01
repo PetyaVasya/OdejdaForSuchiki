@@ -1,6 +1,10 @@
 package com.example.mac.suchik.UI;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.app.Application;
+import android.content.Context;
+import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +22,7 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
     private java.util.List<List> mData;
     private boolean isF;
     private ICallBackOnDayChanged itemClickListener;
+    private Context context;
 
     void setClickListener(ICallBackOnDayChanged itemClickListener) {
         this.itemClickListener = itemClickListener;
@@ -27,10 +32,11 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
         void onDayChanged(List weather, String date);
     }
 
-    public Weather_Adapter(java.util.List<List> data, boolean isF) {
+    public Weather_Adapter(Context context, java.util.List<List> data, boolean isF) {
         super();
         this.isF = isF;
         mData = data;
+        this.context = context;
     }
 
     @Override
@@ -77,8 +83,12 @@ public class Weather_Adapter extends RecyclerView.Adapter<VH_weather_adapter> {
             if (far > 0) holder.temp_avg.setText(String.format("+" + "%.0f" + "F", far));
             else holder.temp_avg.setText(String.format("%.0f" + "F", far));
         }
-        if (mData.get(position).getWeather().get(0).getImageIcon() != null) {
-            holder.im.setImageBitmap(mData.get(position).getWeather().get(0).getImageIcon());
+        String icon = mData.get(position).getWeather().get(0).getIcon();
+        if (icon != null) {
+            Resources resources = context.getResources();
+//            resources.getDrawable();
+            holder.im.setImageResource(resources.getIdentifier(icon, "drawable",
+                    context.getPackageName()));
         }
         else {
             String condition = mData.get(position).getWeather().get(0).getMain();

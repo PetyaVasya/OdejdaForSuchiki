@@ -294,14 +294,7 @@
                 android:layout_marginTop="15dp"
                 android:hint="Введите цвет"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/cloud">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/color_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+                app:layout_constraintTop_toBottomOf="@+id/cloud"/>
 
             <Button
                 android:id="@+id/add_item"

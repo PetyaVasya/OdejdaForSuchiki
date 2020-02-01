@@ -56,42 +56,10 @@ class Weather {
         Fact fact = gson.fromJson(factResponse, Fact.class);
         WeatherData now = (WeatherData) response.response;
         now.setFact(fact);
-        URL url = null;
-        try {
-            url = new URL("https://openweathermap.org/img/wn/"
-                    + now.getFact().getWeather().get(0).getIcon() + ".png");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        if (url != null) {
-            Bitmap bmp = null;
-            try {
-                InputStream in = url.openStream();
-                bmp = BitmapFactory.decodeStream(in);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            now.getFact().getWeather().get(0).setImageIcon(bmp);
-        }
+        now.getFact().getWeather().get(0).setIcon("ic_" + now.getFact().getWeather().get(0).getIcon());
         for (List forecast: now.getList()){
             forecast.setDt_txt(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(forecast.getDt() * 1000)));
-            url = null;
-            try {
-                url = new URL("https://openweathermap.org/img/wn/"
-                        + forecast.getWeather().get(0).getIcon() + ".png");
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-            if (url != null) {
-                Bitmap bmp = null;
-                try {
-                    InputStream in = url.openStream();
-                    bmp = BitmapFactory.decodeStream(in);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                forecast.getWeather().get(0).setImageIcon(bmp);
-            }
+            forecast.getWeather().get(0).setIcon("ic_" + forecast.getWeather().get(0).getIcon());
         }
 
         return response;

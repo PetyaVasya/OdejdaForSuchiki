@@ -41,21 +41,9 @@ public class WrapperApi extends AsyncTask<Void, Void, Response>{
                 SharedPreferences.Editor editor = sp.edit();
                 WeatherData response = (WeatherData) res.response;
                 if (response != null){
-                    for (List list: response.getList()) {
-                        list.getWeather().get(0).setStrImage(getStringFromBitmap(list.getWeather().get(0).getImageIcon()));
-                        list.getWeather().get(0).setImageIcon(null);
-                    }
-                    response.getFact().getWeather().get(0).setStrImage(getStringFromBitmap(response.getFact().getWeather().get(0).getImageIcon()));
-                    response.getFact().getWeather().get(0).setImageIcon(null);
                     editor.putString("weather", gson.toJson(response));
                     editor.apply();
                 }
-                for (List list:response.getList()) {
-                    list.getWeather().get(0).setImageIcon(getBitmapFromString(list.getWeather().get(0).getStrImage()));
-                    list.getWeather().get(0).setStrImage(null);
-                }
-                response.getFact().getWeather().get(0).setImageIcon(getBitmapFromString(response.getFact().getWeather().get(0).getStrImage()));
-                response.getFact().getWeather().get(0).setStrImage(null);
                 flag = false;
             } catch (IOException e) {
                 flag = true;

@@ -18,8 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import android.util.Log;
 
+import com.example.mac.suchik.WeatherData.Sys;
+
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 
 public class Geoposition implements LocationListener {

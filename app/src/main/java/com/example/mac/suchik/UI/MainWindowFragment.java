@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,6 +18,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -80,6 +83,8 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     private ImageView imageHumdity;
     private ImageView imageWindy;
     private ImageView imagePressure;
+    private SwipeRefreshLayout swipeContainer;
+
 
     private String[] position;
     private ArrayAdapter arrayAdapter;
@@ -145,8 +150,6 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
     @Override
     public void onStart() {
         super.onStart();
-        checkInternetConnection = new CheckInternetConnection(getContext());
-        checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        Geoposition geoposition = new Geoposition(getContext());
 //        String[] position = geoposition.start();
 //        //mStorage.setPosition("55.45", "37.36");
@@ -199,6 +202,14 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
         rv_clothes.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         rv.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         java.util.List<String> data = new ArrayList<>();
+        swipeContainer = view.findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                checkInternetConnection = new CheckInternetConnection(getContext());
+                checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+        });
 
         DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
         Date currentDate = new Date();
@@ -252,8 +263,10 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
             else temperature.setText(String.format("%.0f" + "F", far));
         }
 
-        if (weather.getWeather().get(0).getImageIcon() != null) {
-            weather_cloud.setImageBitmap(weather.getWeather().get(0).getImageIcon());
+        String icon = weather.getWeather().get(0).getIcon();
+        if (icon != null) {
+            weather_cloud.setImageResource(getResources().getIdentifier(icon, "drawable",
+                    getContext().getPackageName()));
         }
         else {
             String condition = weather.getWeather().get(0).getMain();
@@ -343,6 +356,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 mStorage.setPosition(position[0], position[1]);
                 break;
             case ResponseType.WTODAY:
+                swipeContainer.setRefreshing(false);
                 final Fact n = (Fact) response.response;
                 final Date current = new Date(System.currentTimeMillis());
                 f = new List(){{
@@ -359,7 +373,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 break;
             case ResponseType.COMMUNITY:
                 final String[] res = (String[]) response.response;
-                String community = res[2];
+                String community = res[2].trim();
                 if (res[2].equals("") && res[0].equals("null") && res[1].equals("null"))
                     res[2] = "Текущее";
                 Log.d("community", "community = " + community);
@@ -382,6 +396,8 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                     spinnerCity.setSelection(spinnerLatest);
                     spinnerCity.setOnItemSelectedListener(this);
                     first = true;
+                    spinnerCity.setEnabled(false);
+                    spinnerCity.setClickable(false);
                 }
                 else if (!cities.contains(res[2])) {
                     cities.add(0, res[2]);
@@ -429,7 +445,7 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
 //                    setRain(new Rain());
 //                System.out.println(gson.fromJson(gson.toJson(mStorage.getResponse(), WeatherData.class), WeatherData.class));
                 today = parseDate(forecasts.get(start).getDt_txt());
-                Weather_Adapter adapter = new Weather_Adapter(forecasts.subList(0 , 40), isF);
+                Weather_Adapter adapter = new Weather_Adapter(getContext(), forecasts.subList(0 , 40), isF);
                 adapter.setClickListener(this);
                 rv.setAdapter(adapter);
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
@@ -441,6 +457,8 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 imageWindy.setVisibility(ImageView.VISIBLE);
                 imageHumdity.setVisibility(ImageView.VISIBLE);
                 date.setText(dateText);
+                spinnerCity.setEnabled(true);
+                spinnerCity.setClickable(true);
                 break;
             case ResponseType.GEOERROR:
                 checkInternetConnection = new CheckInternetConnection(getContext());
@@ -467,11 +485,13 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
             input.setInputType(InputType.TYPE_CLASS_TEXT);
             builder.setView(input);
-
+            spinnerCity.setSelection(spinnerLatest);
 // Set up the buttons
             builder.setPositiveButton("Найти", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    spinnerCity.setEnabled(false);
+                    spinnerCity.setClickable(false);
                     checkInternetConnection = new CheckInternetConnection(getContext(),
                             input.getText().toString());
                     checkInternetConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -481,7 +501,6 @@ public class MainWindowFragment extends Fragment implements Callbacks, AdapterVi
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.cancel();
-                    spinnerCity.setSelection(spinnerLatest);
                 }
             });
 
